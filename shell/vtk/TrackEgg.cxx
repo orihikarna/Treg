@@ -1,3 +1,4 @@
+#include <itkFastMarchingImageFilter.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 #include <vtkActor.h>
@@ -70,7 +71,7 @@ const float egg_org_top = std::tan(egg_alpha);
 const float egg_rad_top = 2 - 1 / std::cos(egg_alpha);
 const float egg_zh = 2 * std::sin(egg_alpha);
 
-constexpr float spacing = 1.0 / 2;
+constexpr float spacing = 1.0 / 1;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(100 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
@@ -192,7 +193,7 @@ int main(int argc, char *argv[]) {
   dumpMemoryUsage("main");
   vtkNew<vtkImageData> dist_data_filter;
   dumpMemoryUsage("main");
-  {
+  if (true) {
     vtkNew<vtkImageData> dist_data_sht;
     {
       vtkNew<vtkImageData> dist_data_flt = createImageData(VTK_FLOAT);
@@ -256,6 +257,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
+
     dumpMemoryUsage("distance short out");
 
     std::cout << "gaussian smoothing" << std::endl;
@@ -273,7 +275,50 @@ int main(int argc, char *argv[]) {
       smoothing_filter->Update();
       dumpMemoryUsage("smoothed");
     }
+  } else {
+    constexpr unsigned int Dimension = 3;
+    using InternalPixelType = float;
+    using InternalImageType = itk::Image<InternalPixelType, Dimension>;
+    using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
+    auto fastMarching = FastMarchingFilterType::New();
+
+    using NodeContainer = FastMarchingFilterType::NodeContainer;
+    using NodeType = FastMarchingFilterType::NodeType;
+    {
+      auto seeds = NodeContainer::New();
+      InternalImageType::IndexType seedPosition;
+      seedPosition[0] = SizeX / 2;
+      seedPosition[1] = SizeY / 2;
+      seedPosition[2] = SizeZ / 2;
+      NodeType node;
+      constexpr double seedValue = 0.0;
+      node.SetValue(seedValue);
+      node.SetIndex(seedPosition);
+      seeds->Initialize();
+      seeds->InsertElement(0, node);
+      fastMarching->SetTrialPoints(seeds);
+    }
+    const itk::Size<Dimension> size{SizeX, SizeY, SizeZ};
+    fastMarching->SetOutputSize(size);
+    const double stoppingTime = mkw_r * 2;
+    fastMarching->SetSpeedConstant(1.0);
+    fastMarching->SetStoppingValue(stoppingTime);
+    fastMarching->Update();
+    // auto mapWriter = InternalWriterType::New();
+    // mapWriter->SetInput(fastMarching->GetOutput());
+    // mapWriter->SetFileName("FastMarchingFilterOutput4.mha");
+    // mapWriter->Update();
+
+    auto dist = fastMarching->GetOutput();
+    dist_data_filter = createImageData(VTK_FLOAT);
+    const size_t num = size_t(SizeX * SizeY) * SizeZ;
+    const float *pin = dist->GetBufferPointer();
+    float *pout = (float *)dist_data_filter->GetScalarPointer();
+    for (size_t n = 0; n < num; ++n) {
+      pout[n] = -pin[n] / spacing * 1024;
+    }
   }
+
   dumpMemoryUsage("smoothed out");
 
   vtkNew<vtkRenderer> renderer;
@@ -341,7 +386,6 @@ int main(int argc, char *argv[]) {
     const double dist_voxel = mkw_r / spacing * 1024;
     const double isoValue = -dist_voxel;
     surface->SetInputData(dist_data_filter);
-    //   surface->SetInputData(imgdata);
     surface->ComputeNormalsOn();
     surface->SetValue(0, isoValue);
     dumpMemoryUsage("marching cubed");
