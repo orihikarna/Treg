@@ -1,6 +1,9 @@
 #include <itkFastMarchingImageFilter.h>
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <vnl/algo/vnl_powell.h>
+#include <vnl/vnl_cost_function.h>
+#include <vnl/vnl_nonlinear_minimizer.h>
 #include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkColorTransferFunction.h>
@@ -24,6 +27,7 @@
 #include <vtkVolumeProperty.h>
 #include <vtkVoxelModeller.h>
 
+#include <Eigen/Dense>
 #include <sstream>
 
 #include "vtkImageEuclideanDistance2.h"
@@ -58,15 +62,15 @@ using NodeType = FastMarchingFilterType::NodeType;
 #include <vtkMarchingCubes.h>
 #endif
 
-constexpr float mkw_r = 3.0;
+constexpr float mkw_r = 0.5;
 constexpr float btm_h = 1;
 
-constexpr float egg_origin_z = -25;
+constexpr float egg_org_z = -25;
 
 constexpr float ball_r = 57.2 / 2;
 constexpr float hole_r = ball_r + 2.5 / 2 + mkw_r;
 
-constexpr float ball_z = 80 + egg_origin_z;
+constexpr float ball_z = 80 + egg_org_z;
 constexpr float ball_y = ball_r + btm_h;
 
 constexpr float egg_scale_x = 45 - mkw_r;
@@ -74,47 +78,20 @@ constexpr float egg_scale_y = 40 - mkw_r;
 constexpr float egg_scale_z = 80 - mkw_r;
 
 constexpr float egg_alpha = 36 / 180.0f * M_PI;
-const float egg_org_top = std::tan(egg_alpha);
-const float egg_rad_top = 2 - 1 / std::cos(egg_alpha);
-const float egg_zh = 2 * std::sin(egg_alpha);
 
-constexpr float spacing = 1.0 / 1;
+const float egg_zbtm = 0;
+const float egg_ztop = std::tan(egg_alpha);
+const float egg_rad_btm = 1;
+const float egg_rad_top = 2 - 1 / std::cos(egg_alpha);
+const float egg_zmin = egg_zbtm - egg_rad_btm;
+const float egg_zmax = egg_ztop + egg_rad_top;
+const float egg_zedge_btm = 0;
+const float egg_zedge_top = 2 * std::sin(egg_alpha);
+
+constexpr float spacing = 1.0 / 2;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(100 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
-
-float egg_slice_r2(float z) {
-  if (z < -0.5f) return -1;
-  if (z < 0) return 0.25f - z * z;
-  if (z < egg_zh) {
-    const float d = std::sqrt(1 - z * z) - 0.5f;
-    return d * d;
-  }
-  const float dz = z - egg_org_top;
-  if (dz < egg_rad_top) return egg_rad_top * egg_rad_top - dz * dz;
-  return -1;
-}
-
-void Egg_slice(vtkImageData *img) {
-  int16_t *ptr_vol = (int16_t *)img->GetScalarPointer();
-  for (int iz = 0; iz < SizeZ; ++iz) {
-    int16_t *ptr_z = ptr_vol + SizeY * SizeX * iz;
-    const float z = spacing * (iz - SizeZ / 2);
-    const float r2 = egg_slice_r2((z - egg_origin_z / spacing) / egg_scale_z);
-    for (int iy = 0; iy < SizeY; ++iy) {
-      int16_t *ptr_y = ptr_z + SizeX * iy;
-      const float y = spacing * (iy - SizeY / 2);
-      const float sy = y * (1 / egg_scale_y);
-      const float sy2 = sy * sy;
-      for (int ix = 0; ix < SizeX; ++ix) {
-        const float x = spacing * (ix - SizeX / 2);
-        const float sx = x * (1 / egg_scale_x);
-        const float sx2 = sx * sx;
-        ptr_y[ix] = std::min<float>(std::max<float>((sx2 + sy2 - r2) * 1024, -16), +16);
-      }
-    }
-  }
-}
 
 template <typename T>
 void Egg(vtkImageData *img) {
@@ -123,7 +100,7 @@ void Egg(vtkImageData *img) {
     T *ptr_z = ptr_vol + SizeY * SizeX * iz;
     const float z = spacing * (iz - SizeZ / 2);
     const float sz = z * (1 / egg_scale_z);
-    const float dz = sz - egg_origin_z / egg_scale_z;
+    const float dz = sz - egg_org_z / egg_scale_z;
     for (int iy = 0; iy < SizeY; ++iy) {
       T *ptr_y = ptr_z + SizeX * iy;
       const float y = spacing * (iy - SizeY / 2);
@@ -142,7 +119,7 @@ void Egg(vtkImageData *img) {
           if (std::atan2(dz, R) < egg_alpha) {
             dist = std::sqrt(R * R + dz * dz) - 2;
           } else {
-            const float dz_top = dz - egg_org_top;
+            const float dz_top = dz - egg_ztop;
             dist = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
         }
@@ -180,10 +157,74 @@ void Ball(vtkImageData *img) {
   }
 }
 
+Eigen::Vector3f track_egg(float z, float theta) {
+  float ez = (z - egg_org_z) / egg_scale_z;
+  float r = 0;
+  if (ez < egg_zmin) {
+    return Eigen::Vector3f::Zero();
+  } else if (ez < egg_zedge_btm) {
+    const float dz = ez - egg_zbtm;
+    r = std::sqrt(egg_rad_btm * egg_rad_btm - dz * dz);
+  } else if (ez < egg_zedge_top) {
+    const float _alpha = std::asin(ez / 2);
+    r = 2 * std::cos(_alpha) - 1;
+  } else if (ez < egg_zmax) {
+    const float dz = ez - egg_ztop;
+    r = std::sqrt(egg_rad_top * egg_rad_top - dz * dz);
+  } else {
+    return Eigen::Vector3f::Zero();
+  }
+  const float zz = ez * egg_scale_z + egg_org_z;
+  const float xx = std::cos(theta) * r * egg_scale_x;
+  const float yy = std::sin(theta) * r * egg_scale_y;
+  return {xx, yy, zz};
+}
+
+class DistanceToTrackEgg : public vnl_cost_function {
+ private:
+  Eigen::Vector3f pos_;
+
+ public:
+  DistanceToTrackEgg(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
+
+  double f(vnl_vector<double> const &x) override {
+    const float z = x[0];
+    const float theta = x[1];
+    const Eigen::Vector3f pos_egg = track_egg(z, theta);
+    if (pos_egg[0] == 0 && pos_egg[1] == 0 && pos_egg[2] == 0) {
+      return 1e6;
+    }
+    const float dist = (pos_ - pos_egg).norm();
+    // std::cout << "dist = " << dist << ", z = " << z << ", theta = " << theta << " --> pos_egg = " << pos_egg << std::endl;
+    return dist;
+  }
+
+  // void gradf(vnl_vector<double> const &x, vnl_vector<double> &dx) {
+  //   // OR, use Finite Difference gradient
+  //   fdgradf(x, dx);
+  // }
+};
+
+float calc_dist(const Eigen::Vector3f &pos) {
+  DistanceToTrackEgg dist(pos);
+  vnl_powell minimizer(&dist);
+  minimizer.set_f_tolerance(1e-6);
+  minimizer.set_trace(true);
+  vnl_vector<double> x(2);
+  double z = pos[2];
+  z = std::max(z, egg_zmin + egg_org_z + 1.0);
+  z = std::min(z, egg_zmax + egg_org_z - 1.0);
+  x[0] = z;
+  x[1] = atan2(pos[1], pos[0]);
+  minimizer.minimize(x);
+  const float d = minimizer.get_end_error();
+  // std::cout << "x = " << x << pos << " : " << minimizer.get_start_error() << " --> " << minimizer.get_end_error() << std::endl;
+  return d;
+}
+
 std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
   const float min_scale = std::min(std::min(egg_scale_x, egg_scale_y), egg_scale_z);
   const float max_scale = std::max(std::max(egg_scale_x, egg_scale_y), egg_scale_z);
-  const float e2pxl = min_scale / spacing;
 
   auto seeds = NodeContainer::New();
   auto outside = NodeContainer::New();
@@ -195,11 +236,11 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
   for (int iz = 0; iz < SizeZ; ++iz) {
     pos[2] = iz;
     const float z = spacing * (iz - SizeZ / 2);
-    const float sz = z * (1 / egg_scale_z);            // scaled for egg
-    const float ez = sz - egg_origin_z / egg_scale_z;  // egg
-    const float ez2 = ez * ez;                         // egg^2
-    const float bz = z - ball_z;                       // ball
-    const float bz2 = bz * bz;                         // ball^2
+    const float sz = z * (1 / egg_scale_z);         // scaled for egg
+    const float ez = sz - egg_org_z / egg_scale_z;  // egg
+    const float ez2 = ez * ez;                      // egg^2
+    const float bz = z - ball_z;                    // ball
+    const float bz2 = bz * bz;                      // ball^2
     for (int iy = 0; iy < SizeY; ++iy) {
       pos[1] = iy;
       const float y = spacing * (iy - SizeY / 2);
@@ -225,22 +266,34 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
           if (std::atan2(ez, R) < egg_alpha) {
             dist_egg = std::sqrt(R * R + ez2) - 2;
           } else {
-            const float dz_top = ez - egg_org_top;
+            const float dz_top = ez - egg_ztop;
             dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
         }
-        const float dist_egg_pxl = dist_egg * e2pxl;
+        float dist_egg_pxl = dist_egg * max_scale / spacing;  // possible max distance
+        if (std::abs(dist_egg_pxl) < 4) {
+          dist_egg_pxl = calc_dist({x, y, z}) * ((dist_egg_pxl >= 0) ? +1 : -1);
+        }
 
         // ball
         const float dist_ball = std::sqrt(bx2 + by2 + bz2) - hole_r;
         const float dist_ball_pxl = dist_ball / spacing;
 
         NodeType node;
-        if (dist_egg_pxl < 0 && dist_ball_pxl > 0) {
-          const double seedValue = 0;
-          node.SetValue(seedValue);
-          node.SetIndex(pos);
-          seeds->InsertElement(cnt_seeds++, node);
+        if (std::abs(dist_egg_pxl) < std::abs(dist_ball_pxl)) {  // egg
+          if (dist_egg_pxl < 2 && dist_ball_pxl > 0) {
+            // const double seedValue = std::max<float>(dist_egg_pxl, 0);
+            node.SetValue(dist_egg_pxl);
+            node.SetIndex(pos);
+            seeds->InsertElement(cnt_seeds++, node);
+          }
+        } else {  // ball
+          if (dist_egg_pxl < 0 && dist_ball_pxl > -2) {
+            const double seedValue = std::min<float>(-dist_ball_pxl, 2);
+            node.SetValue(seedValue);
+            node.SetIndex(pos);
+            seeds->InsertElement(cnt_seeds++, node);
+          }
         }
       }
     }
