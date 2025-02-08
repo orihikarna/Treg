@@ -62,7 +62,7 @@ using NodeType = FastMarchingFilterType::NodeType;
 #include <vtkMarchingCubes.h>
 #endif
 
-constexpr float mkw_r = 0.5;
+constexpr float mkw_r = 2.0;
 constexpr float btm_h = 1;
 
 constexpr float egg_org_z = -25;
@@ -192,28 +192,23 @@ class DistanceToTrackEgg : public vnl_cost_function {
     const float theta = x[1];
     const Eigen::Vector3f pos_egg = track_egg(z, theta);
     if (pos_egg[0] == 0 && pos_egg[1] == 0 && pos_egg[2] == 0) {
-      return 1e6;
+      return 1e9;
     }
-    const float dist = (pos_ - pos_egg).norm();
+    const float dist2 = (pos_ - pos_egg).squaredNorm();
     // std::cout << "dist = " << dist << ", z = " << z << ", theta = " << theta << " --> pos_egg = " << pos_egg << std::endl;
-    return dist;
+    return dist2;
   }
-
-  // void gradf(vnl_vector<double> const &x, vnl_vector<double> &dx) {
-  //   // OR, use Finite Difference gradient
-  //   fdgradf(x, dx);
-  // }
 };
 
-float calc_dist(const Eigen::Vector3f &pos) {
+float calc_dist_egg2(const Eigen::Vector3f &pos) {
   DistanceToTrackEgg dist(pos);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-6);
   minimizer.set_trace(true);
-  vnl_vector<double> x(2);
   double z = pos[2];
   z = std::max(z, egg_zmin + egg_org_z + 1.0);
   z = std::min(z, egg_zmax + egg_org_z - 1.0);
+  vnl_vector<double> x(2);
   x[0] = z;
   x[1] = atan2(pos[1], pos[0]);
   minimizer.minimize(x);
@@ -271,8 +266,8 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
           }
         }
         float dist_egg_pxl = dist_egg * max_scale / spacing;  // possible max distance
-        if (std::abs(dist_egg_pxl) < 4) {
-          dist_egg_pxl = calc_dist({x, y, z}) * ((dist_egg_pxl >= 0) ? +1 : -1);
+        if (std::abs(dist_egg_pxl) < 4) {                     // refine the distance value
+          dist_egg_pxl = std::sqrt(calc_dist_egg2({x, y, z})) / spacing * ((dist_egg_pxl >= 0) ? +1 : -1);
         }
 
         // ball
@@ -282,7 +277,6 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
         NodeType node;
         if (std::abs(dist_egg_pxl) < std::abs(dist_ball_pxl)) {  // egg
           if (dist_egg_pxl < 2 && dist_ball_pxl > 0) {
-            // const double seedValue = std::max<float>(dist_egg_pxl, 0);
             node.SetValue(dist_egg_pxl);
             node.SetIndex(pos);
             seeds->InsertElement(cnt_seeds++, node);
@@ -404,6 +398,7 @@ int main(int argc, char *argv[]) {
       dumpMemoryUsage("smoothed");
     }
   } else {
+    dumpMemoryUsage("trial points");
     auto fastMarching = FastMarchingFilterType::New();
     if (false) {
       auto seeds = NodeContainer::New();
@@ -430,17 +425,15 @@ int main(int argc, char *argv[]) {
       auto [seeds, outside] = TrackEggSeeds();
       fastMarching->SetTrialPoints(seeds);
     }
+    dumpMemoryUsage("fast marching");
+    const double stoppingTime = 2 * mkw_r / spacing;
     const itk::Size<Dimension> size{SizeX, SizeY, SizeZ};
     fastMarching->SetOutputSize(size);
-    const double stoppingTime = 50;
     fastMarching->SetSpeedConstant(1.0);
     fastMarching->SetStoppingValue(stoppingTime);
     fastMarching->Update();
-    // auto mapWriter = InternalWriterType::New();
-    // mapWriter->SetInput(fastMarching->GetOutput());
-    // mapWriter->SetFileName("FastMarchingFilterOutput4.mha");
-    // mapWriter->Update();
 
+    dumpMemoryUsage("convert distance");
     auto dist = fastMarching->GetOutput();
     dist_data_filter = createImageData(VTK_FLOAT);
     const size_t num = size_t(SizeX * SizeY) * SizeZ;
