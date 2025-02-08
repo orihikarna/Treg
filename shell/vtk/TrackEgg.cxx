@@ -38,6 +38,13 @@ long dumpMemoryUsage(const std::string &title = "") {
     return 0;
 }
 
+constexpr unsigned int Dimension = 3;
+using InternalPixelType = float;
+using InternalImageType = itk::Image<InternalPixelType, Dimension>;
+using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
+using NodeContainer = FastMarchingFilterType::NodeContainer;
+using NodeType = FastMarchingFilterType::NodeType;
+
 // vtkFlyingEdges3D was introduced in VTK >= 8.2
 #if VTK_MAJOR_VERSION >= 9 || (VTK_MAJOR_VERSION >= 8 && VTK_MINOR_VERSION >= 2)
 #define USE_FLYING_EDGES
@@ -173,6 +180,74 @@ void Ball(vtkImageData *img) {
   }
 }
 
+std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
+  const float min_scale = std::min(std::min(egg_scale_x, egg_scale_y), egg_scale_z);
+  const float max_scale = std::max(std::max(egg_scale_x, egg_scale_y), egg_scale_z);
+  const float e2pxl = min_scale / spacing;
+
+  auto seeds = NodeContainer::New();
+  auto outside = NodeContainer::New();
+  seeds->Initialize();
+  outside->Initialize();
+  size_t cnt_seeds = 0;
+  size_t cnt_outside = 0;
+  InternalImageType::IndexType pos;
+  for (int iz = 0; iz < SizeZ; ++iz) {
+    pos[2] = iz;
+    const float z = spacing * (iz - SizeZ / 2);
+    const float sz = z * (1 / egg_scale_z);            // scaled for egg
+    const float ez = sz - egg_origin_z / egg_scale_z;  // egg
+    const float ez2 = ez * ez;                         // egg^2
+    const float bz = z - ball_z;                       // ball
+    const float bz2 = bz * bz;                         // ball^2
+    for (int iy = 0; iy < SizeY; ++iy) {
+      pos[1] = iy;
+      const float y = spacing * (iy - SizeY / 2);
+      const float ey = y * (1 / egg_scale_y);  // scaled for egg
+      const float ey2 = ey * ey;               // egg^2
+      const float by = y - ball_y;             // ball
+      const float by2 = by * by;               // baaa^2
+      for (int ix = 0; ix < SizeX; ++ix) {
+        pos[0] = ix;
+        const float x = spacing * (ix - SizeX / 2);
+        const float ex = x * (1 / egg_scale_x);  // scaled for egg
+        const float ex2 = ex * ex;               // egg^2
+        const float bx = x;                      // ball
+        const float bx2 = bx * bx;               // ball^2
+
+        // egg
+        const float r2 = ex2 + ey2;
+        float dist_egg = std::numeric_limits<float>::max();
+        if (ez <= 0) {
+          dist_egg = std::sqrt(r2 + ez2) - 1;
+        } else {
+          const float R = std::sqrt(r2) + 1;
+          if (std::atan2(ez, R) < egg_alpha) {
+            dist_egg = std::sqrt(R * R + ez2) - 2;
+          } else {
+            const float dz_top = ez - egg_org_top;
+            dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
+          }
+        }
+        const float dist_egg_pxl = dist_egg * e2pxl;
+
+        // ball
+        const float dist_ball = std::sqrt(bx2 + by2 + bz2) - hole_r;
+        const float dist_ball_pxl = dist_ball / spacing;
+
+        NodeType node;
+        if (dist_egg_pxl < 0 && dist_ball_pxl > 0) {
+          const double seedValue = 0;
+          node.SetValue(seedValue);
+          node.SetIndex(pos);
+          seeds->InsertElement(cnt_seeds++, node);
+        }
+      }
+    }
+  }
+  return {seeds, outside};
+}
+
 vtkNew<vtkImageData> createImageData(int scalar_type) {
   vtkNew<vtkImageData> data;
   data->SetDimensions(SizeX, SizeY, SizeZ);
@@ -193,7 +268,7 @@ int main(int argc, char *argv[]) {
   dumpMemoryUsage("main");
   vtkNew<vtkImageData> dist_data_filter;
   dumpMemoryUsage("main");
-  if (true) {
+  if (false) {
     vtkNew<vtkImageData> dist_data_sht;
     {
       vtkNew<vtkImageData> dist_data_flt = createImageData(VTK_FLOAT);
@@ -276,31 +351,35 @@ int main(int argc, char *argv[]) {
       dumpMemoryUsage("smoothed");
     }
   } else {
-    constexpr unsigned int Dimension = 3;
-    using InternalPixelType = float;
-    using InternalImageType = itk::Image<InternalPixelType, Dimension>;
-    using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
     auto fastMarching = FastMarchingFilterType::New();
-
-    using NodeContainer = FastMarchingFilterType::NodeContainer;
-    using NodeType = FastMarchingFilterType::NodeType;
-    {
+    if (false) {
       auto seeds = NodeContainer::New();
-      InternalImageType::IndexType seedPosition;
-      seedPosition[0] = SizeX / 2;
-      seedPosition[1] = SizeY / 2;
-      seedPosition[2] = SizeZ / 2;
-      NodeType node;
-      constexpr double seedValue = 0.0;
-      node.SetValue(seedValue);
-      node.SetIndex(seedPosition);
       seeds->Initialize();
-      seeds->InsertElement(0, node);
+      constexpr double M = 1.5;
+      int cnt = 0;
+      for (double dz = -M; dz <= M; dz += 1) {
+        for (double dy = -M; dy <= M; dy += 1) {
+          for (double dx = -M; dx <= M; dx += 1) {
+            InternalImageType::IndexType seedPosition;
+            seedPosition[0] = SizeX / 2 + dx;
+            seedPosition[1] = SizeY / 2 + dy;
+            seedPosition[2] = SizeZ / 2 + dz;
+            NodeType node;
+            const double seedValue = sqrt(dx * dx + dy * dy + dz * dz);
+            node.SetValue(seedValue);
+            node.SetIndex(seedPosition);
+            seeds->InsertElement(cnt++, node);
+          }
+        }
+      }
+      fastMarching->SetTrialPoints(seeds);
+    } else {
+      auto [seeds, outside] = TrackEggSeeds();
       fastMarching->SetTrialPoints(seeds);
     }
     const itk::Size<Dimension> size{SizeX, SizeY, SizeZ};
     fastMarching->SetOutputSize(size);
-    const double stoppingTime = mkw_r * 2;
+    const double stoppingTime = 50;
     fastMarching->SetSpeedConstant(1.0);
     fastMarching->SetStoppingValue(stoppingTime);
     fastMarching->Update();
@@ -316,6 +395,7 @@ int main(int argc, char *argv[]) {
     float *pout = (float *)dist_data_filter->GetScalarPointer();
     for (size_t n = 0; n < num; ++n) {
       pout[n] = -pin[n] / spacing * 1024;
+      // pout[n] = -pin[n];
     }
   }
 
