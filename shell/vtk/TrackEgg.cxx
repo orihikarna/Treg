@@ -7,7 +7,6 @@
 #include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkColorTransferFunction.h>
-#include <vtkDICOMImageReader.h>
 #include <vtkFixedPointVolumeRayCastMapper.h>
 #include <vtkImageData.h>
 #include <vtkImageEuclideanDistance.h>
@@ -22,7 +21,6 @@
 #include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkSTLWriter.h>
-#include <vtkSphereSource.h>
 #include <vtkVersion.h>
 #include <vtkVolumeProperty.h>
 #include <vtkVoxelModeller.h>
@@ -42,13 +40,6 @@ long dumpMemoryUsage(const std::string &title = "") {
     return 0;
 }
 
-constexpr unsigned int Dimension = 3;
-using InternalPixelType = float;
-using InternalImageType = itk::Image<InternalPixelType, Dimension>;
-using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
-using NodeContainer = FastMarchingFilterType::NodeContainer;
-using NodeType = FastMarchingFilterType::NodeType;
-
 // vtkFlyingEdges3D was introduced in VTK >= 8.2
 #if VTK_MAJOR_VERSION >= 9 || (VTK_MAJOR_VERSION >= 8 && VTK_MINOR_VERSION >= 2)
 #define USE_FLYING_EDGES
@@ -61,6 +52,13 @@ using NodeType = FastMarchingFilterType::NodeType;
 #else
 #include <vtkMarchingCubes.h>
 #endif
+
+constexpr unsigned int Dimension = 3;
+using InternalPixelType = float;
+using InternalImageType = itk::Image<InternalPixelType, Dimension>;
+using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
+using NodeContainer = FastMarchingFilterType::NodeContainer;
+using NodeType = FastMarchingFilterType::NodeType;
 
 constexpr float mkw_r = 2.0;
 constexpr float btm_h = 1;
@@ -88,10 +86,12 @@ const float egg_zmax = egg_ztop + egg_rad_top;
 const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
-constexpr float spacing = 1.0 / 2;
+// constexpr float spacing = 1.0 / 2;
+constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(100 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
+constexpr float dist_offset_pxl = 2.0;
 
 template <typename T>
 void Egg(vtkImageData *img) {
@@ -157,11 +157,13 @@ void Ball(vtkImageData *img) {
   }
 }
 
+const Eigen::Vector3f EGG_OOB = Eigen::Vector3f::Zero();
+
 Eigen::Vector3f track_egg(float z, float theta) {
   float ez = (z - egg_org_z) / egg_scale_z;
   float r = 0;
   if (ez < egg_zmin) {
-    return Eigen::Vector3f::Zero();
+    return EGG_OOB;
   } else if (ez < egg_zedge_btm) {
     const float dz = ez - egg_zbtm;
     r = std::sqrt(egg_rad_btm * egg_rad_btm - dz * dz);
@@ -172,7 +174,7 @@ Eigen::Vector3f track_egg(float z, float theta) {
     const float dz = ez - egg_ztop;
     r = std::sqrt(egg_rad_top * egg_rad_top - dz * dz);
   } else {
-    return Eigen::Vector3f::Zero();
+    return EGG_OOB;
   }
   const float zz = ez * egg_scale_z + egg_org_z;
   const float xx = std::cos(theta) * r * egg_scale_x;
@@ -191,11 +193,8 @@ class DistanceToTrackEgg : public vnl_cost_function {
     const float z = x[0];
     const float theta = x[1];
     const Eigen::Vector3f pos_egg = track_egg(z, theta);
-    if (pos_egg[0] == 0 && pos_egg[1] == 0 && pos_egg[2] == 0) {
-      return 1e9;
-    }
+    if (pos_egg == EGG_OOB) return 1e9;
     const float dist2 = (pos_ - pos_egg).squaredNorm();
-    // std::cout << "dist = " << dist << ", z = " << z << ", theta = " << theta << " --> pos_egg = " << pos_egg << std::endl;
     return dist2;
   }
 };
@@ -206,15 +205,16 @@ float calc_dist_egg2(const Eigen::Vector3f &pos) {
   minimizer.set_f_tolerance(1e-6);
   minimizer.set_trace(true);
   double z = pos[2];
-  z = std::max(z, egg_zmin + egg_org_z + 1.0);
-  z = std::min(z, egg_zmax + egg_org_z - 1.0);
+  {  // bring it inside the egg
+    z = std::max(z, egg_zmin + egg_org_z + 1.0);
+    z = std::min(z, egg_zmax + egg_org_z - 1.0);
+  }
   vnl_vector<double> x(2);
   x[0] = z;
   x[1] = atan2(pos[1], pos[0]);
   minimizer.minimize(x);
-  const float d = minimizer.get_end_error();
-  // std::cout << "x = " << x << pos << " : " << minimizer.get_start_error() << " --> " << minimizer.get_end_error() << std::endl;
-  return d;
+  const float dist2 = minimizer.get_end_error();
+  return dist2;
 }
 
 std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
@@ -265,27 +265,30 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
             dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
         }
-        float dist_egg_pxl = dist_egg * max_scale / spacing;  // possible max distance
+        float dist_egg_pxl = dist_egg * min_scale / spacing;  // possible min distance
         if (std::abs(dist_egg_pxl) < 4) {                     // refine the distance value
-          dist_egg_pxl = std::sqrt(calc_dist_egg2({x, y, z})) / spacing * ((dist_egg_pxl >= 0) ? +1 : -1);
+          dist_egg_pxl = (dist_egg_pxl >= 0) ? +1 : -1;
+          dist_egg_pxl *= std::sqrt(calc_dist_egg2({x, y, z})) / spacing;
         }
 
         // ball
         const float dist_ball = std::sqrt(bx2 + by2 + bz2) - hole_r;
         const float dist_ball_pxl = dist_ball / spacing;
 
-        NodeType node;
-        if (std::abs(dist_egg_pxl) < std::abs(dist_ball_pxl)) {  // egg
-          if (dist_egg_pxl < 2 && dist_ball_pxl > 0) {
-            node.SetValue(dist_egg_pxl);
-            node.SetIndex(pos);
-            seeds->InsertElement(cnt_seeds++, node);
-          }
-        } else {  // ball
-          if (dist_egg_pxl < 0 && dist_ball_pxl > -2) {
-            const double seedValue = std::min<float>(-dist_ball_pxl, 2);
-            node.SetValue(seedValue);
-            node.SetIndex(pos);
+        if (dist_egg_pxl < 2 && dist_ball_pxl > -2) {
+          NodeType node;
+          node.SetIndex(pos);
+          if (dist_egg_pxl < -3.6 && dist_ball_pxl > 3.6) {
+            // do nothing
+          } else if (dist_egg_pxl < -1.8 && dist_ball_pxl > 1.8) {
+            // outside
+            outside->InsertElement(cnt_outside++, node);
+          } else {
+            if (-dist_egg_pxl < dist_ball_pxl) {  // use egg dist
+              node.SetValue(dist_egg_pxl + dist_offset_pxl);
+            } else {  // use ball dist
+              node.SetValue(-dist_ball_pxl + dist_offset_pxl);
+            }
             seeds->InsertElement(cnt_seeds++, node);
           }
         }
@@ -424,6 +427,7 @@ int main(int argc, char *argv[]) {
     } else {
       auto [seeds, outside] = TrackEggSeeds();
       fastMarching->SetTrialPoints(seeds);
+      fastMarching->SetOutsidePoints(outside);
     }
     dumpMemoryUsage("fast marching");
     const double stoppingTime = 2 * mkw_r / spacing;
@@ -510,7 +514,7 @@ int main(int argc, char *argv[]) {
     vtkNew<vtkMarchingCubes> surface;
 #endif
     const double dist_voxel = mkw_r / spacing * 1024;
-    const double isoValue = -dist_voxel;
+    const double isoValue = -dist_voxel - dist_offset_pxl;
     surface->SetInputData(dist_data_filter);
     surface->ComputeNormalsOn();
     surface->SetValue(0, isoValue);
