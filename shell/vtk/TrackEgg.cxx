@@ -91,7 +91,6 @@ constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(100 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
-constexpr float dist_offset_pxl = 2.0;
 
 template <typename T>
 void Egg(vtkImageData *img) {
@@ -159,7 +158,7 @@ void Ball(vtkImageData *img) {
 
 const Eigen::Vector3f EGG_OOB = Eigen::Vector3f::Zero();
 
-Eigen::Vector3f track_egg(float z, float theta) {
+Eigen::Vector3f egg_surface(float z, float theta) {
   float ez = (z - egg_org_z) / egg_scale_z;
   float r = 0;
   if (ez < egg_zmin) {
@@ -182,25 +181,44 @@ Eigen::Vector3f track_egg(float z, float theta) {
   return {xx, yy, zz};
 }
 
-class DistanceToTrackEgg : public vnl_cost_function {
+class DistanceToEggSurface : public vnl_cost_function {
  private:
   Eigen::Vector3f pos_;
 
  public:
-  DistanceToTrackEgg(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
+  DistanceToEggSurface(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
 
   double f(vnl_vector<double> const &x) override {
     const float z = x[0];
     const float theta = x[1];
-    const Eigen::Vector3f pos_egg = track_egg(z, theta);
+    const Eigen::Vector3f pos_egg = egg_surface(z, theta);
     if (pos_egg == EGG_OOB) return 1e9;
     const float dist2 = (pos_ - pos_egg).squaredNorm();
     return dist2;
   }
 };
 
-float calc_dist_egg2(const Eigen::Vector3f &pos) {
-  DistanceToTrackEgg dist(pos);
+class DistanceToTrackEggSurface : public vnl_cost_function {
+ private:
+  const Eigen::Vector3f ball_ctr_{0, ball_y, ball_z};
+  Eigen::Vector3f pos_;
+
+ public:
+  DistanceToTrackEggSurface(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
+
+  double f(vnl_vector<double> const &x) override {
+    const float z = x[0];
+    const float theta = x[1];
+    const Eigen::Vector3f pos_egg = egg_surface(z, theta);
+    if (pos_egg == EGG_OOB) return 1e9;
+    const float dist2 = (pos_ - pos_egg).squaredNorm();
+    const float dist_ball = hole_r - (pos_egg - ball_ctr_).norm();
+    return dist2 + 1e2 * dist_ball * dist_ball;
+  }
+};
+
+float calc_dist2_egg(const Eigen::Vector3f &pos) {
+  DistanceToEggSurface dist(pos);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-6);
   minimizer.set_trace(true);
@@ -214,6 +232,25 @@ float calc_dist_egg2(const Eigen::Vector3f &pos) {
   x[1] = atan2(pos[1], pos[0]);
   minimizer.minimize(x);
   const float dist2 = minimizer.get_end_error();
+  return dist2;
+}
+
+float calc_dist2_track_egg(const Eigen::Vector3f &pos) {
+  DistanceToTrackEggSurface dist(pos);
+  vnl_powell minimizer(&dist);
+  minimizer.set_f_tolerance(1e-6);
+  minimizer.set_trace(true);
+  double z = pos[2];
+  {  // bring it inside the egg
+    z = std::max(z, egg_zmin + egg_org_z + 1.0);
+    z = std::min(z, egg_zmax + egg_org_z - 1.0);
+  }
+  vnl_vector<double> x(2);
+  x[0] = z;
+  x[1] = atan2(pos[1], pos[0]);
+  minimizer.minimize(x);
+  // const float dist2 = minimizer.get_end_error();
+  const float dist2 = (egg_surface(x[0], x[1]) - pos).squaredNorm();
   return dist2;
 }
 
@@ -265,30 +302,47 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
             dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
         }
-        float dist_egg_pxl = dist_egg * min_scale / spacing;  // possible min distance
-        if (std::abs(dist_egg_pxl) < 4) {                     // refine the distance value
-          dist_egg_pxl = (dist_egg_pxl >= 0) ? +1 : -1;
-          dist_egg_pxl *= std::sqrt(calc_dist_egg2({x, y, z})) / spacing;
-        }
+        const float dist_egg_pxl = dist_egg * min_scale / spacing;  // possible min distance
+        // inside egg negative, outside egg positive
 
         // ball
-        const float dist_ball = std::sqrt(bx2 + by2 + bz2) - hole_r;
+        const float dist_ball = hole_r - std::sqrt(bx2 + by2 + bz2);  // inside positive, outside negative
         const float dist_ball_pxl = dist_ball / spacing;
 
-        if (dist_egg_pxl < 2 && dist_ball_pxl > -2) {
+        if (dist_egg_pxl < 2 && dist_ball_pxl < 2) {
           NodeType node;
           node.SetIndex(pos);
-          if (dist_egg_pxl < -3.6 && dist_ball_pxl > 3.6) {
+          if (dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
             // do nothing
-          } else if (dist_egg_pxl < -1.8 && dist_ball_pxl > 1.8) {
+          } else if (dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
             // outside
             outside->InsertElement(cnt_outside++, node);
           } else {
-            if (-dist_egg_pxl < dist_ball_pxl) {  // use egg dist
-              node.SetValue(dist_egg_pxl + dist_offset_pxl);
-            } else {  // use ball dist
-              node.SetValue(-dist_ball_pxl + dist_offset_pxl);
+            float fine_dist_egg_pxl = (dist_egg_pxl >= 0) ? +1 : -1;
+            fine_dist_egg_pxl *= std::sqrt(calc_dist2_egg({x, y, z})) / spacing;
+            const float dist_edge_pxl = std::sqrt(calc_dist2_track_egg({x, y, z})) / spacing;
+            float dist;
+            if (dist_ball_pxl < 0) {        // outside the ball
+              if (fine_dist_egg_pxl < 0) {  // inside the egg
+                dist = std::max(fine_dist_egg_pxl, dist_ball_pxl);
+              } else {  // outside the egg
+                dist = fine_dist_egg_pxl;
+              }
+            } else {                        // inside the ball
+              if (fine_dist_egg_pxl < 0) {  // inside the egg
+                dist = dist_ball_pxl;
+              } else {  // outside the egg
+                dist = dist_edge_pxl;
+                // dist = std::max(fine_dist_egg_pxl, dist_ball_pxl);
+                // dist = std::sqrt(fine_dist_egg_pxl * fine_dist_egg_pxl + dist_ball_pxl * dist_ball_pxl);
+              }
             }
+            // if (-fine_dist_egg_pxl < dist_ball_pxl) {  // use egg dist
+            //   node.SetValue(fine_dist_egg_pxl;
+            // } else {  // use ball dist
+            //   node.SetValue(-dist_ball_pxl);
+            // }
+            node.SetValue(dist);
             seeds->InsertElement(cnt_seeds++, node);
           }
         }
@@ -514,7 +568,8 @@ int main(int argc, char *argv[]) {
     vtkNew<vtkMarchingCubes> surface;
 #endif
     const double dist_voxel = mkw_r / spacing * 1024;
-    const double isoValue = -dist_voxel - dist_offset_pxl;
+    const double isoValue = -dist_voxel;
+    // const double isoValue = 0;
     surface->SetInputData(dist_data_filter);
     surface->ComputeNormalsOn();
     surface->SetValue(0, isoValue);
