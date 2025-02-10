@@ -1,5 +1,5 @@
-#include "TrackEgg.h"
-
+#include <sys/resource.h>
+#include <sys/time.h>
 #include <vtkActor.h>
 #include <vtkCamera.h>
 #include <vtkColorTransferFunction.h>
@@ -24,7 +24,7 @@
 #include <Eigen/Dense>
 #include <sstream>
 
-#include "util.h"
+#include "TrackEgg.h"
 #include "vtkImageEuclideanDistance2.h"
 
 // vtkFlyingEdges3D was introduced in VTK >= 8.2
@@ -39,6 +39,16 @@
 #else
 #include <vtkMarchingCubes.h>
 #endif
+
+long dumpMemoryUsage(const std::string &title = "") {
+  struct rusage usage;
+  if (getrusage(RUSAGE_SELF, &usage) == 0) {
+    const int mem_MB = std::round(usage.ru_maxrss / 1024.0 / 1024.0);
+    std::cout << "===[ Memory: " << mem_MB << " MB (" << title << ") ]===" << std::endl;
+    return usage.ru_maxrss;  // bytes
+  } else
+    return 0;
+}
 
 vtkNew<vtkImageData> createImageData(int scalar_type) {
   vtkNew<vtkImageData> data;
