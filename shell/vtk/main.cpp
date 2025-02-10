@@ -65,11 +65,13 @@ vtkNew<vtkImageData> createImageData(int scalar_type) {
 }
 
 int main(int argc, char *argv[]) {
-  vtkNew<vtkNamedColors> colors;
-
   dumpMemoryUsage("main");
+  TrackEggRidge ridge(720);
+  return 0;
+
   vtkNew<vtkImageData> dist_data_filter;
   dumpMemoryUsage("main");
+  vtkNew<vtkNamedColors> colors;
   if (false) {
     vtkNew<vtkImageData> dist_data_sht;
     {

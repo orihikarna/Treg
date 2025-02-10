@@ -107,7 +107,29 @@ void Ball(vtkImageData *img) {
 float calc_dist2_egg(const Eigen::Vector3f &pos);
 float calc_dist2_track_egg(const Eigen::Vector3f &pos);
 
-void calc_ridge_points();
+// ridge points
+// center = ball center
+// radius = ball radius
+// azim = -PI ~ +PI
+class TrackEggRidge {
+ private:
+  const size_t M;
+  const size_t N;
+
+  using T = float;
+  const T dazim = T(M_PI) / M;
+
+  std::vector<T> azims_;
+  std::vector<T> elevs_;
+
+ public:
+  TrackEggRidge(size_t _M = 18) : M(_M), N(2 * M + 1), dazim(T(M_PI) / M) { Init(); }
+
+ private:
+  void Init();
+};
+
+extern TrackEggRidge ridge;
 
 /*
 
