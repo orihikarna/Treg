@@ -92,6 +92,7 @@ constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(100 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
 
+// ===== 1. Euclidean Distance Tranform =====
 template <typename T>
 void Egg(vtkImageData *img) {
   T *ptr_vol = (T *)img->GetScalarPointer();
@@ -156,6 +157,7 @@ void Ball(vtkImageData *img) {
   }
 }
 
+// ===== 2. Fast Marching =====
 const Eigen::Vector3f EGG_OOB = Eigen::Vector3f::Zero();
 
 Eigen::Vector3f egg_surface(float z, float theta) {
@@ -180,6 +182,21 @@ Eigen::Vector3f egg_surface(float z, float theta) {
   const float yy = std::sin(theta) * r * egg_scale_y;
   return {xx, yy, zz};
 }
+
+/*
+
+0. 稜線を求める
+1. egg_shape への最短位置を求める ball の外なら有効（最短距離＝ egg 面に垂直）
+2. ball への最短位置を求める。稜線より下なら有効（最短距離＝ ball 面に垂直）
+3-a. 1か2が両方も有効なら短い方を採用
+3-b. 1か2の片方が有効ならそれを採用？
+3-c, いずれも無効なら、稜線への最短位置を求める
+
+片方が有効の時に、稜線を確認する必要があるか？
+egg 面の外側は凸麺なのでない
+ball 側の外側も凸麺なのでない
+
+*/
 
 class DistanceToEggSurface : public vnl_cost_function {
  private:
@@ -333,15 +350,8 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
                 dist = dist_ball_pxl;
               } else {  // outside the egg
                 dist = dist_edge_pxl;
-                // dist = std::max(fine_dist_egg_pxl, dist_ball_pxl);
-                // dist = std::sqrt(fine_dist_egg_pxl * fine_dist_egg_pxl + dist_ball_pxl * dist_ball_pxl);
               }
             }
-            // if (-fine_dist_egg_pxl < dist_ball_pxl) {  // use egg dist
-            //   node.SetValue(fine_dist_egg_pxl;
-            // } else {  // use ball dist
-            //   node.SetValue(-dist_ball_pxl);
-            // }
             node.SetValue(dist);
             seeds->InsertElement(cnt_seeds++, node);
           }
