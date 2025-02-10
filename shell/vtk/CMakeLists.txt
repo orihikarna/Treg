@@ -33,7 +33,7 @@ endif()
 
 # Prevent a "command line is too long" failure in Windows.
 set(CMAKE_NINJA_FORCE_RESPONSE_FILE "ON" CACHE BOOL "Force Ninja to use response files.")
-add_executable(TrackEgg MACOSX_BUNDLE TrackEgg.cxx vtkImageEuclideanDistance2.cxx)
+add_executable(TrackEgg MACOSX_BUNDLE main.cpp TrackEgg.cpp vtkImageEuclideanDistance2.cxx)
 target_link_libraries(TrackEgg PRIVATE ${VTK_LIBRARIES})
 target_link_libraries(TrackEgg PRIVATE ${ITK_LIBRARIES})
 target_link_libraries(TrackEgg PRIVATE ${ITKVNL_LIBRARIES})
