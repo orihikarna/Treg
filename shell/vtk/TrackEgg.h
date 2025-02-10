@@ -104,9 +104,6 @@ void Ball(vtkImageData *img) {
   }
 }
 
-float calc_dist2_egg(const Eigen::Vector3f &pos);
-float calc_dist2_track_egg(const Eigen::Vector3f &pos);
-
 // ridge points
 // center = ball center
 // radius = ball radius
@@ -121,30 +118,16 @@ class TrackEggRidge {
 
   std::vector<T> azims_;
   std::vector<T> elevs_;
+  std::vector<Eigen::Vector3f> points_;
 
  public:
   TrackEggRidge(size_t _M = 18) : M(_M), N(2 * M + 1), dazim(T(M_PI) / M) { Init(); }
 
+  T CalcDist(const Eigen::Vector3f &pos) const;
+
  private:
   void Init();
 };
-
-extern TrackEggRidge ridge;
-
-/*
-
-0. 稜線を求める
-1. egg_shape への最短位置を求める ball の外なら有効（最短距離＝ egg 面に垂直）
-2. ball への最短位置を求める。稜線より下なら有効（最短距離＝ ball 面に垂直）
-3-a. 1か2が両方も有効なら短い方を採用
-3-b. 1か2の片方が有効ならそれを採用？
-3-c, いずれも無効なら、稜線への最短位置を求める
-
-片方が有効の時に、稜線を確認する必要があるか？
-egg 面の外側は凸麺なのでない
-ball 側の外側も凸麺なのでない
-
-*/
 
 using InternalImageType = itk::Image<float, 3>;
 using FastMarchingFilterType = itk::FastMarchingImageFilter<InternalImageType, InternalImageType>;
