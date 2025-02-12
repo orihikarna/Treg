@@ -45,6 +45,11 @@ std::tuple<float, float> hole_pos2azel(const Eigen::Vector3f &_pos) {
   return {azim, elev};
 }
 
+bool is_inside_hole(const Eigen::Vector3f &pos) {
+  constexpr float hole_r2 = hole_r * hole_r;
+  return (pos - ball_ctr).squaredNorm() <= hole_r2;
+}
+
 // ===== 2. distance to egg surface for Fast Marching =====
 class DistanceToEggSurface : public vnl_cost_function {
  private:
@@ -63,7 +68,7 @@ class DistanceToEggSurface : public vnl_cost_function {
   }
 };
 
-std::tuple<float, Eigen::Vector3f> calc_dist2_egg(const Eigen::Vector3f &pos) {
+std::tuple<float, Eigen::Vector3f> calc_dist_egg(const Eigen::Vector3f &pos) {
   DistanceToEggSurface dist(pos);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-6);
@@ -77,15 +82,18 @@ std::tuple<float, Eigen::Vector3f> calc_dist2_egg(const Eigen::Vector3f &pos) {
   x[0] = z;
   x[1] = atan2(pos[1], pos[0]);
   minimizer.minimize(x);
-  const float dist2 = minimizer.get_end_error();
   const Eigen::Vector3f pos_egg = egg_surface(x[0], x[1]);
-  return {dist2, pos_egg};
+  // distance sign
+  const bool inside = ((pos - pos_egg).dot(pos_egg - Eigen::Vector3f(0, 0, egg_org_z)) < 0);
+  const float dist2 = minimizer.get_end_error();
+  const float _dist = std::sqrt(dist2) * ((inside) ? -1 : +1);
+  return {_dist, pos_egg};
 }
 
 std::tuple<float, Eigen::Vector3f> calc_dist_hole(const Eigen::Vector3f &_pos) {
   const Eigen::Vector3f pos = _pos - ball_ctr;
   const float pos_norm = pos.norm();
-  const float dist = hole_r - pos_norm;
+  const float dist = hole_r - pos_norm;  // inside hole --> positive, outside hole --> negative
   const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm) + ball_ctr;
   return {dist, pos_hole};
 }
@@ -181,11 +189,33 @@ void TrackEggRidge::Init() {
     azims_[n] = azim;
     elevs_[n] = elev;
     points_[n] = hole_surface(azim, elev);
-    std::cout << "(azim, elev) = " << azim * (180 / M_PI) << ", " << elev * (180 / M_PI) << std::endl;
+    // std::cout << "(azim, elev) = " << azim * (180 / M_PI) << ", " << elev * (180 / M_PI) << std::endl;
   }
 }
 
-TrackEggRidge::T TrackEggRidge::CalcDist(const Eigen::Vector3f &pos) const {
+// on the hole surface?
+bool TrackEggRidge::IsOnHoleSurface(float azim, float elev) const {
+  if (azim < -M_PI || +M_PI < azim) {
+    std::cerr << "(" << __LINE__ << ") azim = " << azim << " is out of range [-M_PI, +M_PI]" << std::endl;
+    throw;
+  }
+  const int n0 = int(std::floor(azim / dazim)) + M;
+  float elev0 = -101;
+  for (int n = std::max(n0 - 1, 0); n < std::min<int>(n0 + 1, N); ++n) {
+    if (azims_[n] <= azim && azim <= azims_[n + 1]) {
+      const float k = (azim - azims_[n0]) / (azims_[n0 + 1] - azims_[n0]);
+      elev0 = elevs_[n0] + (elevs_[n0 + 1] - elevs_[n0]) * k;
+      break;
+    }
+  }
+  if (elev0 < -100) {
+    std::cerr << "(" << __LINE__ << ") azim  = " << azim << " not handled" << std::endl;
+    throw;
+  }
+  return (elev < elev0);
+}
+
+TrackEggRidge::T TrackEggRidge::CalcMinDist(const Eigen::Vector3f &pos) const {
   T min_dist2 = std::numeric_limits<T>::max();
   for (size_t n = 0; n < N; ++n) {
     const T dist2 = (pos - points_[n]).squaredNorm();
@@ -193,45 +223,7 @@ TrackEggRidge::T TrackEggRidge::CalcDist(const Eigen::Vector3f &pos) const {
       min_dist2 = dist2;
     }
   }
-  return min_dist2;
-}
-
-class DistanceToTrackEggSurface : public vnl_cost_function {
- private:
-  const Eigen::Vector3f ball_ctr_{0, ball_y, ball_z};
-  Eigen::Vector3f pos_;
-
- public:
-  DistanceToTrackEggSurface(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
-
-  double f(vnl_vector<double> const &x) override {
-    const float z = x[0];
-    const float theta = x[1];
-    const Eigen::Vector3f pos_egg = egg_surface(z, theta);
-    if (pos_egg == EGG_OOB) return 1e9;
-    const float dist2 = (pos_ - pos_egg).squaredNorm();
-    const float dist_ball = hole_r - (pos_egg - ball_ctr_).norm();
-    return dist2 + 1e2 * dist_ball * dist_ball;
-  }
-};
-
-float calc_dist2_track_egg(const Eigen::Vector3f &pos) {
-  DistanceToTrackEggSurface dist(pos);
-  vnl_powell minimizer(&dist);
-  minimizer.set_f_tolerance(1e-6);
-  minimizer.set_trace(true);
-  double z = pos[2];
-  {  // bring it inside the egg
-    z = std::max(z, egg_zmin + egg_org_z + 1.0);
-    z = std::min(z, egg_zmax + egg_org_z - 1.0);
-  }
-  vnl_vector<double> x(2);
-  x[0] = z;
-  x[1] = atan2(pos[1], pos[0]);
-  minimizer.minimize(x);
-  // const float dist2 = minimizer.get_end_error();
-  const float dist2 = (egg_surface(x[0], x[1]) - pos).squaredNorm();
-  return dist2;
+  return std::sqrt(min_dist2);
 }
 
 std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
@@ -270,19 +262,19 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
 
         // egg
         const float r2 = ex2 + ey2;
-        float dist_egg = std::numeric_limits<float>::max();
+        float approx_dist_egg = std::numeric_limits<float>::max();
         if (ez <= 0) {
-          dist_egg = std::sqrt(r2 + ez2) - 1;
+          approx_dist_egg = std::sqrt(r2 + ez2) - 1;
         } else {
           const float R = std::sqrt(r2) + 1;
           if (std::atan2(ez, R) < egg_alpha) {
-            dist_egg = std::sqrt(R * R + ez2) - 2;
+            approx_dist_egg = std::sqrt(R * R + ez2) - 2;
           } else {
             const float dz_top = ez - egg_ztop;
-            dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
+            approx_dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
         }
-        const float dist_egg_pxl = dist_egg * min_scale / spacing;  // possible min distance
+        const float approx_dist_egg_pxl = approx_dist_egg * min_scale / spacing;  // possible min distance
         // inside egg negative, outside egg positive
 
         // ball
@@ -301,31 +293,43 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
         egg 面の外側は凸面なのでない
         hole 面の外側も凸面なのでない
         */
-        if (dist_egg_pxl < 2 && dist_ball_pxl < 2) {
+        if (approx_dist_egg_pxl < 2 && dist_ball_pxl < 2) {
           NodeType node;
           node.SetIndex(pos);
-          if (dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
+          if (approx_dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
             // do nothing
-          } else if (dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
+          } else if (approx_dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
             // outside
             outside->InsertElement(cnt_outside++, node);
           } else {
-            float fine_dist_egg_pxl = (dist_egg_pxl >= 0) ? +1 : -1;
-            fine_dist_egg_pxl *= std::sqrt(std::get<float>(calc_dist2_egg({x, y, z}))) / spacing;
-            const float dist_edge_pxl = std::sqrt(calc_dist2_track_egg({x, y, z})) / spacing;
-            float dist;
-            if (dist_ball_pxl < 0) {        // outside the ball
-              if (fine_dist_egg_pxl < 0) {  // inside the egg
-                dist = std::max(fine_dist_egg_pxl, dist_ball_pxl);
-              } else {  // outside the egg
-                dist = fine_dist_egg_pxl;
+            const Eigen::Vector3f pos{x, y, z};
+
+            const auto [dist_egg, egg_foot] = calc_dist_egg(pos);
+            const float dist_egg_pxl = dist_egg / spacing;
+            const bool egg_foot_valid = (is_inside_hole(egg_foot) == false);
+
+            const auto [dist_hole, hole_foot] = calc_dist_hole(pos);
+            const float dist_hole_pxl = dist_hole / spacing;
+            const auto [azim, elev] = hole_pos2azel(pos);
+            const bool hole_foot_valid = ridge.IsOnHoleSurface(azim, elev);
+
+            float dist = std::numeric_limits<float>::max();
+            if (dist_egg_pxl < 0 && dist_hole_pxl < 0) {  // inside track-egg
+              dist = -std::numeric_limits<float>::max();
+              if (egg_foot_valid) dist = std::max(dist, dist_egg_pxl);
+              if (hole_foot_valid) dist = std::max(dist, dist_hole_pxl);
+              if (egg_foot_valid == false) {
+                // std::cerr << "(" << __LINE__ << ") egg_foot_valid = false" << std::endl;
+                // throw;
               }
-            } else {                        // inside the ball
-              if (fine_dist_egg_pxl < 0) {  // inside the egg
-                dist = dist_ball_pxl;
-              } else {  // outside the egg
-                dist = dist_edge_pxl;
+              if (hole_foot_valid == false) {
+                // std::cerr << "(" << __LINE__ << ") hole_foot_valid = false" << std::endl;
+                // throw;
               }
+            } else {  // outside track_egg
+              if (dist_egg_pxl >= 0 && egg_foot_valid) dist = std::min(dist, dist_egg_pxl);
+              if (dist_hole_pxl >= 0 && hole_foot_valid) dist = std::min(dist, dist_hole_pxl);
+              dist = std::min(dist, ridge.CalcMinDist(pos) / spacing);
             }
             node.SetValue(dist);
             seeds->InsertElement(cnt_seeds++, node);

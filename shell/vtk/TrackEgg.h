@@ -123,7 +123,8 @@ class TrackEggRidge {
  public:
   TrackEggRidge(size_t _M = 18) : M(_M), N(2 * M + 1), dazim(T(M_PI) / M) { Init(); }
 
-  T CalcDist(const Eigen::Vector3f &pos) const;
+  bool IsOnHoleSurface(float azim, float elev) const;
+  T CalcMinDist(const Eigen::Vector3f &pos) const;
 
  private:
   void Init();
