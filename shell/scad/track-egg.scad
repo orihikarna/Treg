@@ -19,10 +19,10 @@ module shell_base() {
     translate([0, 0, btm_h])
       rotate([-90, 0, 0])
         scale(egg_scale)
-          import("egg-42-3.stl");
+          import("egg-42-5.stl");
     translate(center)
       scale(hole_r)
-        import("icosphere-3.stl");
+        import("icosphere-5.stl");
     translate([0, 0, -200])
       cube(400, center = true);
   }
@@ -50,16 +50,18 @@ module shell_3d_minkowski() {
   }
 }
 
+tilt = 30;
+
 module egg_base() {
-  rotate([30, 0, 0])
+  rotate([tilt, 0, 0])
     translate(-center)
       rotate([-90, 0, 0])
-        scale([egg_scale[0] - mkw_r, egg_scale[1] - mkw_r, egg_scale[2] - mkw_r])
-          import("egg-42-2.stl");
+        scale([egg_scale[0], egg_scale[1], egg_scale[2]])
+          import("egg-42-4.stl");
 }
 
-dazim = 12;
-delev = 12;
+dazim = 6;
+delev = 6;
 
 r = 200;
 th = delev / 2;
@@ -99,7 +101,7 @@ module elev_section(elev, thick = 1) {
 }
 
 module half_track_egg() {
-  rotate([-30, 0, 0])
+  rotate([-tilt, 0, 0])
     union()
       for(azim0 = [dazim / 2:dazim:180])
         union()
@@ -131,11 +133,12 @@ module shell_2d_offset() {
 module shell_vtk() {
   difference() {
     intersection() {
-      // rotate([0, 0, 180])
-      rotate([0, 180, 0])
-        rotate([-90, 0, 0])
-          import("vtk/surface-mkw=3.stl");
-      translate([0, 0, 200 - btm_h])
+      translate([0, 0, btm_h])
+        // rotate([0, 0, 180])
+        rotate([0, 180, 0])
+          rotate([-90, 0, 0])
+            import("../../surface-mkw=3_fm.stl");
+      translate([0, 0, 200])
         cube(400, center = true);
     // translate([200, 0, 0])
     // translate([0, -150, 0])
@@ -148,9 +151,9 @@ module shell_vtk() {
 difference() {
   // shell_base();
   // shell_3d_minkowski();
-  shell_2d_offset();
-  // shell_vtk();
-  support_ball_holes();
+  // shell_2d_offset();
+  shell_vtk();
+// support_ball_holes();
 }
 
 // ball

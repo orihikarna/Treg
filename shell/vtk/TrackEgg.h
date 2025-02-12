@@ -9,7 +9,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-constexpr float mkw_r = 2.0;
+constexpr float mkw_r = 3.0;
 constexpr float btm_h = 1;
 
 constexpr float egg_org_z = -25;
@@ -20,11 +20,16 @@ constexpr float hole_r = ball_r + 2.5 / 2 + mkw_r;
 constexpr float ball_z = 80 + egg_org_z;
 constexpr float ball_y = ball_r + btm_h;
 
-constexpr float egg_scale_x = 45 - mkw_r;
-constexpr float egg_scale_y = 40 - mkw_r;
+constexpr float egg_scale_x = 47 - mkw_r;
+constexpr float egg_scale_y = 50 - mkw_r;
 constexpr float egg_scale_z = 80 - mkw_r;
 
-constexpr float egg_alpha = 36 / 180.0f * M_PI;
+// constexpr float egg_scale_x = 47 - mkw_r;
+// constexpr float egg_scale_y = 50 - mkw_r;
+// constexpr float egg_scale_z = 80 - mkw_r;
+
+// constexpr float egg_alpha = 36 / 180.0f * M_PI;
+constexpr float egg_alpha = 42 / 180.0f * M_PI;
 
 const float egg_zbtm = 0;
 const float egg_ztop = std::tan(egg_alpha);
@@ -35,10 +40,10 @@ const float egg_zmax = egg_ztop + egg_rad_top;
 const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
-// constexpr float spacing = 1.0 / 2;
-constexpr float spacing = 2.0 / 3;
+constexpr float spacing = 1.0 / 1;
+// constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
-constexpr int SizeY = int(100 / spacing + 0.5f);
+constexpr int SizeY = int(120 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
 
 // ===== 1. inside / outside for Euclidean Distance Tranform =====

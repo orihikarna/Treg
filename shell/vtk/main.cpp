@@ -143,8 +143,8 @@ int main(int argc, char *argv[]) {
       vtkNew<vtkImageGaussianSmooth> smoothing_filter;
       smoothing_filter->SetDimensionality(3);
       smoothing_filter->SetInputData(dist_data_sht);
-      constexpr double sigma = 3.0;
-      constexpr double radius = 4;
+      constexpr double sigma = 1.4;
+      constexpr double radius = 2;
       smoothing_filter->SetStandardDeviations(sigma, sigma, sigma);
       smoothing_filter->SetRadiusFactors(radius, radius, radius);
       smoothing_filter->SetOutput(dist_data_filter);

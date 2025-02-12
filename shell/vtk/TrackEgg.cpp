@@ -296,11 +296,14 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
         if (approx_dist_egg_pxl < 2 && dist_ball_pxl < 2) {
           NodeType node;
           node.SetIndex(pos);
-          if (approx_dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
-            // do nothing
-          } else if (approx_dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
-            // outside
-            outside->InsertElement(cnt_outside++, node);
+          //   if (approx_dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
+          // do nothing
+          //   } else if (approx_dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
+          // outside
+          // outside->InsertElement(cnt_outside++, node);
+          if (approx_dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {
+            node.SetValue(-1.8);
+            seeds->InsertElement(cnt_seeds++, node);
           } else {
             const Eigen::Vector3f pos{x, y, z};
 
