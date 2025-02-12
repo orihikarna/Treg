@@ -130,14 +130,14 @@ module shell_2d_offset() {
     }
 }
 
-module shell_vtk() {
+module shell_vtk(path) {
   difference() {
     intersection() {
       translate([0, 0, btm_h])
         // rotate([0, 0, 180])
         rotate([0, 180, 0])
           rotate([-90, 0, 0])
-            import("../../surface-mkw=3_fm.stl");
+            import(path);
       translate([0, 0, 200])
         cube(400, center = true);
     // translate([200, 0, 0])
@@ -148,11 +148,19 @@ module shell_vtk() {
 }
 
 // shell
+if (true) {
+  shell_base();
+  shell_3d_minkowski();
+  shell_2d_offset();
+  shell_vtk("../../surface-mkw=3_fm.stl");
+  shell_vtk("../../surface-mkw=3_mc.stl");
+}
 difference() {
-  // shell_base();
-  // shell_3d_minkowski();
-  // shell_2d_offset();
-  shell_vtk();
+  shell_base();
+// shell_3d_minkowski();
+// shell_2d_offset();
+// shell_vtk("../../surface-mkw=3_fm.stl");
+// shell_vtk("../../surface-mkw=3_mc.stl");
 // support_ball_holes();
 }
 
