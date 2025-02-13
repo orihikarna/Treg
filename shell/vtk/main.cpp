@@ -54,7 +54,7 @@ vtkNew<vtkImageData> createImageData(int scalar_type) {
   vtkNew<vtkImageData> data;
   data->SetDimensions(SizeX, SizeY, SizeZ);
   data->SetSpacing(spacing, spacing, spacing);
-  data->SetOrigin(-SizeX / 2 * spacing, -SizeY / 2 * spacing, -SizeZ / 2 * spacing);
+  data->SetOrigin(-SizeX / 2 * spacing, -SizeY / 2 * spacing, -SizeZ / 2 * spacing - egg_org_z);
   data->AllocateScalars(scalar_type, 1);
   const size_t mem_size = size_t(data->GetScalarSize()) * SizeX * SizeY * SizeZ;
   const size_t mem_size_MB = mem_size / 1024 / 1024;
