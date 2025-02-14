@@ -20,16 +20,11 @@ constexpr float hole_r = ball_r + 2.5 / 2 + mkw_r;
 constexpr float ball_z = 80 + egg_org_z;
 constexpr float ball_y = ball_r + btm_h;
 
-constexpr float egg_scale_x = 47 - mkw_r;
-constexpr float egg_scale_y = 50 - mkw_r;
+constexpr float egg_scale_x = 45 - mkw_r;
+constexpr float egg_scale_y = 40 - mkw_r;
 constexpr float egg_scale_z = 80 - mkw_r;
 
-// constexpr float egg_scale_x = 47 - mkw_r;
-// constexpr float egg_scale_y = 50 - mkw_r;
-// constexpr float egg_scale_z = 80 - mkw_r;
-
-// constexpr float egg_alpha = 36 / 180.0f * M_PI;
-constexpr float egg_alpha = 42 / 180.0f * M_PI;
+constexpr float egg_alpha = 36 / 180.0f * M_PI;
 
 const float egg_zbtm = 0;
 const float egg_ztop = std::tan(egg_alpha);
