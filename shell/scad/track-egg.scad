@@ -141,7 +141,7 @@ module shell_vtk(path) {
 }
 
 // shell
-if (true) {
+if (false) {
   // shell_base();
   // shell_3d_minkowski();
   // shell_2d_offset();
@@ -149,12 +149,12 @@ if (true) {
   shell_vtk("../../surface-mkw=3_fm.stl");
 }
 difference() {
-// shell_base();
-// shell_3d_minkowski();
-// shell_2d_offset();
-// shell_vtk("../../surface-mkw=3_fm.stl");
-// shell_vtk("../../surface-mkw=3_mc.stl");
-// support_ball_holes();
+  // shell_base();
+  // shell_3d_minkowski();
+  // shell_2d_offset();
+  // shell_vtk("../../surface-mkw=3_mc.stl");
+  shell_vtk("../../surface-mkw=3_fm.stl");
+  support_ball_holes();
 }
 
 // ball

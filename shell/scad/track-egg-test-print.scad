@@ -21,27 +21,33 @@ XR = 7;
 
 difference() {
   import("track-egg.stl");
-  translate([0, 15, 0])
-    linear_slit(XR, 40, 45, 47);
-  translate([0, -43, 0])
-    linear_slit(XR, 40, 42, 19);
-  for(xsign = [-1, +1]) {
-    translate([xsign * (XR * 2 + 3), 0, 0]) {
-      translate([0, +30, 0])
-        linear_slit(XR, 20, 39, 43);
-      translate([0, -10, 0])
-        linear_slit(XR, 20, 44, 42);
-      translate([0, -50, 0])
-        linear_slit(XR, 20, 34, 16);
-    }
-    translate([xsign * (XR * 4 + 3 * 2), 0, 0]) {
-      translate([0, 24, 0])
-        linear_slit(XR, 20, 27, 31);
-      translate([0, -16, 0])
-        linear_slit(XR, 20, 31, 25);
+  if (false) {
+    translate([0, 15, 0])
+      linear_slit(XR, 40, 45, 47);
+    translate([0, -43, 0])
+      linear_slit(XR, 40, 42, 19);
+    for(xsign = [-1, +1]) {
+      translate([xsign * (XR * 2 + 3), 0, 0]) {
+        translate([0, +30, 0])
+          linear_slit(XR, 20, 39, 43);
+        translate([0, -10, 0])
+          linear_slit(XR, 20, 44, 42);
+        translate([0, -50, 0])
+          linear_slit(XR, 20, 34, 16);
+      }
+      translate([xsign * (XR * 4 + 3 * 2), 0, 0]) {
+        translate([0, 24, 0])
+          linear_slit(XR, 20, 27, 31);
+        translate([0, -16, 0])
+          linear_slit(XR, 20, 31, 25);
+      }
     }
   }
-//   translate([0, 200 + 20, 0])
+  if (true) {
+    translate([0, -6, -0.01])
+      linear_slit(30, 36, 42, 34);
+  }
+//   translate([-200, 0, 0])
 //   translate([-200 + (XR * 2 + 3), 0, 0])
 //   translate([-200 + (XR * 4 + 3 * 2), 0, 0])
 // cube(400, center = true);
