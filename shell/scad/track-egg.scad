@@ -144,9 +144,9 @@ module shell_vtk(path) {
 if (true) {
   // shell_base();
   // shell_3d_minkowski();
-  shell_2d_offset();
-// shell_vtk("../../surface-mkw=3_fm.stl");
-// shell_vtk("../../surface-mkw=3_mc.stl");
+  // shell_2d_offset();
+  // shell_vtk("../../surface-mkw=3_mc.stl");
+  shell_vtk("../../surface-mkw=3_fm.stl");
 }
 difference() {
 // shell_base();
