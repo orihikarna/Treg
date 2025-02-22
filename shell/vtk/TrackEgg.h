@@ -9,7 +9,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-constexpr float mkw_r = 3.0;
+constexpr float mkw_r = 4.0;
 constexpr float btm_h = 1;
 
 constexpr float egg_org_z = -25;
@@ -17,10 +17,10 @@ constexpr float egg_org_z = -25;
 constexpr float ball_r = 57.2 / 2;
 constexpr float hole_r = ball_r + 2.5 / 2 + mkw_r;
 
-constexpr float ball_z = 80 + egg_org_z;
-constexpr float ball_y = ball_r + btm_h;
+constexpr float ball_z = -36 + egg_org_z;
+constexpr float ball_y = ball_r + 2.5 / 2 + btm_h;
 
-constexpr float egg_scale_x = 45 - mkw_r;
+constexpr float egg_scale_x = 35 - mkw_r;
 constexpr float egg_scale_y = 40 - mkw_r;
 constexpr float egg_scale_z = 80 - mkw_r;
 
@@ -35,7 +35,8 @@ const float egg_zmax = egg_ztop + egg_rad_top;
 const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
-constexpr float spacing = 1.0 / 1;
+// constexpr float spacing = 1.0 / 1;
+constexpr float spacing = 3.0 / 4;
 // constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(120 / spacing + 0.5f);

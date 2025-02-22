@@ -3,15 +3,17 @@
 // alpha: [0, pi/4]
 include <params.scad>
 // include <icosphere.scad>
-// include <egg.scad>
+include <egg.scad>
 
 module support_ball_holes() {
   translate(center)
     for(i = [0:2])
       rotate([0, 0, 120 * i])
-        translate([0, hole_r * cos(45), -hole_r * sin(45)])
-          scale(1.25)
-            import("icosphere-3.stl");
+        rotate([-45, 0, 0])
+          translate([0, 0, -hole_r])
+            scale(1.25)
+              // import("icosphere-3.stl");
+              cylinder(h = 2.2, r = 1, center = true, $fn = 64);
 }
 
 module shell_base() {
@@ -19,10 +21,11 @@ module shell_base() {
     translate([0, 0, btm_h])
       rotate([-90, 0, 0])
         scale(egg_scale)
-          import("egg-42-5.stl");
+          // import("egg-42-4.stl");
+          egg(egg_btm_alpha, egg_top_alpha, 4);
     translate(center)
       scale(hole_r)
-        import("icosphere-5.stl");
+        import("icosphere-4.stl");
     translate([0, 0, -200])
       cube(400, center = true);
   }
@@ -152,8 +155,7 @@ difference() {
   // shell_base();
   // shell_3d_minkowski();
   // shell_2d_offset();
-  // shell_vtk("../../surface-mkw=3_mc.stl");
-  shell_vtk("../../surface-mkw=3_fm.stl");
+  shell_vtk("../../surface-mkw=4_fm.stl");
   support_ball_holes();
 }
 

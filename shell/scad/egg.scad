@@ -15,16 +15,18 @@ function tanh_inv(y) = ln((1 + y) / (1 - y)) / 2;
 function L(alpha) = (2 / sqrt(3)) * tanh_inv(sqrt(3) * tan(alpha / 2));
 function L_inv(L) = atan(tanh(L * (sqrt(3) / 2)) / sqrt(3)) * 2;
 
-module egg(tip_alpha, recursion = 2) {
-  L = L(tip_alpha);
+module egg(btm_alpha, top_alpha, recursion = 2) {
+  L0 = L(btm_alpha);
+  L1 = L(top_alpha);
   hull() {
-    for(alpha = [0, tip_alpha])
+    for(alpha = [btm_alpha, top_alpha])
       translate([0, 0, tan(alpha)])
-        icosphere((2 - 1 / cos(alpha)), recursion);
+        scale((2 - 1 / cos(alpha)))
+          icosphere(1, recursion);
     N = round(pow(2, recursion + 2) * 1.4);
     K = round(pow(2, recursion) * 1.5);
     for(k = [1:K - 1]) {
-      alpha = L_inv(L * k / K);
+      alpha = L_inv((L1 - L0) * k / K + L0);
       translate([0, 0, 2 * sin(alpha)])
         linear_extrude(0.01, scale = 0)
           rotate([0, 0, 180 / N * k])
@@ -33,4 +35,4 @@ module egg(tip_alpha, recursion = 2) {
   }
 }
 
-egg(42, 2);
+// egg(0, 42, 2);
