@@ -6,27 +6,27 @@ include <params.scad>
 include <egg.scad>
 
 module support_ball_holes() {
-  translate(center)
-    for(i = [0:2])
-      rotate([0, 0, 120 * i])
-        rotate([-45, 0, 0])
-          translate([0, 0, -hole_r])
-            scale(1.25)
-              // import("icosphere-3.stl");
-              cylinder(h = 2.2, r = 1, center = true, $fn = 64);
+  for(i = [0:2])
+    rotate([0, 0, 120 * i])
+      rotate([-45, 0, 0])
+        translate([0, 0, -hole_r])
+          scale(1.25)
+            // import("icosphere-3.stl");
+            cylinder(h = 2.2, r = 1, center = true, $fn = 64);
 }
 
 module shell_base() {
   difference() {
-    translate([0, 0, btm_h])
-      rotate([-90, 0, 0])
-        scale(egg_scale)
-          // import("egg-42-4.stl");
-          egg(egg_btm_alpha, egg_top_alpha, 4);
-    translate(center)
-      scale(hole_r)
-        import("icosphere-4.stl");
-    translate([0, 0, -200])
+    rotate([egg_tilt, 0, 0])
+      translate(-center)
+        translate([0, 0, btm_h])
+          rotate([-90, 0, 0])
+            scale(egg_scale)
+              // import("egg-42-4.stl");
+              egg(egg_btm_alpha, egg_top_alpha, 4);
+    scale(hole_r)
+      import("icosphere-4.stl");
+    translate([0, 0, -200 - center[2]])
       cube(400, center = true);
   }
 }
@@ -35,23 +35,24 @@ module shell_3d_minkowski() {
   difference() {
     minkowski() {
       difference() {
-        translate([0, 0, btm_h])
-          rotate([-90, 0, 0])
-            scale(egg_mkw_scale)
-              import("egg-42-3.stl");
-        translate(center)
-          scale(hole_mkw_r)
-            import("icosphere-3.stl");
+        rotate([egg_tilt, 0, 0])
+          translate(-center)
+            translate([0, 0, btm_h])
+              rotate([-90, 0, 0])
+                scale(egg_mkw_scale)
+                  import("egg-42-2.stl");
+        scale(hole_mkw_r)
+          import("icosphere-2.stl");
       }
       scale(mkw_r)
         import("icosphere-1.stl");
     }
-    translate([0, 0, -200])
+    translate([0, 0, -200 - center[2]])
       cube(400, center = true);
   }
 }
 
-tilt = 30;
+tilt = -24;
 
 module egg_base() {
   rotate([tilt, 0, 0])
@@ -61,8 +62,8 @@ module egg_base() {
           import("egg-42-4.stl");
 }
 
-dazim = 8;
-delev = 8;
+dazim = 12;
+delev = 12;
 
 r = 300;
 th = delev / 2;
@@ -120,13 +121,13 @@ module half_track_egg() {
 
 module shell_2d_offset() {
   difference() {
-    translate(center)
+    rotate([egg_tilt, 0, 0])
       union() {
         half_track_egg();
         mirror([1, 0, 0])
           half_track_egg();
       }
-    translate([0, 0, -200])
+    translate([0, 0, -200 - center[2]])
       cube(400, center = true);
   }
 }
@@ -144,18 +145,18 @@ module shell_vtk(path) {
 }
 
 // shell
-if (false) {
-  // shell_base();
-  // shell_3d_minkowski();
-  // shell_2d_offset();
-  // shell_vtk("../../surface-mkw=3_mc.stl");
-  shell_vtk("../../surface-mkw=3_fm.stl");
+if (true) {
+// shell_base();
+// shell_3d_minkowski();
+// shell_2d_offset();
+// shell_vtk("../../surface-mkw=3_mc.stl");
+// shell_vtk("../../surface-mkw=3_fm.stl");
 }
 difference() {
-  // shell_base();
+  shell_base();
   // shell_3d_minkowski();
   // shell_2d_offset();
-  shell_vtk("../../surface-mkw=4_fm.stl");
+  // shell_vtk("../../surface-mkw=4_fm.stl");
   support_ball_holes();
 }
 
