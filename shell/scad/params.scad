@@ -5,7 +5,7 @@ center = [0, -32, hole_r + btm_h];
 egg_btm_alpha = 0;
 egg_top_alpha = 36;
 egg_scale = [40, 40, 80];
-egg_tilt = 8;
+egg_tilt = 7;
 
 mkw_r = 3;
 

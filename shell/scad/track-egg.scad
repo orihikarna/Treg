@@ -8,7 +8,7 @@ include <egg.scad>
 module support_ball_holes() {
   for(i = [0:2])
     rotate([0, 0, 120 * i])
-      rotate([-45, 0, 0])
+      rotate([-50, 0, 0])
         translate([0, 0, -hole_r])
           scale(1.25)
             // import("icosphere-3.stl");
@@ -23,9 +23,9 @@ module shell_base() {
           rotate([-90, 0, 0])
             scale(egg_scale)
               // import("egg-42-4.stl");
-              egg(egg_btm_alpha, egg_top_alpha, 4);
+              egg(egg_btm_alpha, egg_top_alpha, 5);
     scale(hole_r)
-      import("icosphere-4.stl");
+      import("icosphere-5.stl");
     translate([0, 0, -200 - center[2]])
       cube(400, center = true);
   }
