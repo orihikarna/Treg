@@ -26,8 +26,6 @@ module shell_base() {
               egg(egg_btm_alpha, egg_top_alpha, 5);
     scale(hole_r)
       import("icosphere-5.stl");
-    translate([0, 0, -200 - center[2]])
-      cube(400, center = true);
   }
 }
 
@@ -47,8 +45,6 @@ module shell_3d_minkowski() {
       scale(mkw_r)
         import("icosphere-1.stl");
     }
-    translate([0, 0, -200 - center[2]])
-      cube(400, center = true);
   }
 }
 
@@ -120,43 +116,76 @@ module half_track_egg() {
 }
 
 module shell_2d_offset() {
-  difference() {
-    rotate([egg_tilt, 0, 0])
-      union() {
+  rotate([egg_tilt, 0, 0])
+    union() {
+      half_track_egg();
+      mirror([1, 0, 0])
         half_track_egg();
-        mirror([1, 0, 0])
-          half_track_egg();
-      }
-    translate([0, 0, -200 - center[2]])
-      cube(400, center = true);
-  }
+    }
 }
 
 module shell_vtk(path) {
-  difference() {
-    translate([0, 0, btm_h])
-      // rotate([0, 0, 180])
-      rotate([0, 180, 0])
-        rotate([-90, 0, 0])
-          import(path);
-    translate([0, 0, -200])
-      cube(400, center = true);
+  translate([0, 0, btm_h])
+    // rotate([0, 0, 180])
+    rotate([0, 180, 0])
+      rotate([-90, 0, 0])
+        import(path);
+}
+
+module shell() {
+  shell_base();
+// shell_3d_minkowski();
+// shell_2d_offset();
+// shell_vtk("../../surface-mkw=4_fm.stl");
+}
+
+module button_section(extrude_h = 10, offset_r = 0) {
+  translate([0, 32, 2 - center[2]])
+    rotate([8, 0, 0])
+      rotate([0, -90, 0])
+        rotate([180, 0, 0])
+          linear_extrude(extrude_h)
+            offset(offset_r)
+              scale(18)
+                if (true)
+                  egg_2d(0, 45);
+                else
+                  hull() {
+                    intersection() {
+                      translate([+2, 0])
+                        square(4, center = true);
+                      egg_2d(0, 45);
+                    }
+                    intersection() {
+                      translate([-2, 0])
+                        square(4, center = true);
+                      scale([1, 1])
+                        egg_2d(0, 45);
+                    }
+                  }
+}
+
+module button_hole_left() {
+  translate([28, 0, 0]) {
+    button_section(10, 0.5);
+    mirror([1, 0, 0])
+      button_section(2, 2.5);
   }
 }
 
-// shell
-if (true) {
-// shell_base();
-// shell_3d_minkowski();
-// shell_2d_offset();
-// shell_vtk("../../surface-mkw=3_mc.stl");
-// shell_vtk("../../surface-mkw=3_fm.stl");
+module treg_top() {
+  difference() {
+    shell();
+    translate([0, 0, -200 - center[2]])
+      cube(400, center = true);
+    button_hole_left();
+    mirror([1, 0, 0])
+      button_hole_left();
+  }
 }
+
 difference() {
-  shell_base();
-  // shell_3d_minkowski();
-  // shell_2d_offset();
-  // shell_vtk("../../surface-mkw=4_fm.stl");
+  treg_top();
   support_ball_holes();
 }
 

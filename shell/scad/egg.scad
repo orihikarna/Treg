@@ -35,6 +35,25 @@ module egg(btm_alpha, top_alpha, recursion = 2) {
   }
 }
 
+module egg_2d(btm_alpha, top_alpha, fn = 90) {
+  L0 = L(btm_alpha);
+  L1 = L(top_alpha);
+  hull() {
+    for(alpha = [btm_alpha, top_alpha])
+      translate([0, tan(alpha)])
+        circle(r = 2 - 1 / cos(alpha), $fn = fn);
+    K = round(fn / 4);
+    for(k = [1:K - 1]) {
+      alpha = L_inv((L1 - L0) * k / K + L0);
+      translate([0, 2 * sin(alpha)])
+        scale([1, 0.2])
+          circle(r = 2 * cos(alpha) - 1, $fn = 4);
+    }
+  }
+}
+
+// linear_extrude(0.1)
+//   egg_2d(0, 45);
 
 
 // point on ellipse     p = (2*cos(alpha)-1, k*sin(alpha))
