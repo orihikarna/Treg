@@ -1,13 +1,14 @@
 #include "TrackEgg.h"
 
 namespace {
-const Eigen::Vector3f ball_ctr{0, ball_y, ball_z};
-const Eigen::Vector3f EGG_OOB = Eigen::Vector3f::Zero();
+// const Eigen::Vector3f ball_ctr{0, ball_y, ball_z};
+const Eigen::Vector3f ball_ctr{0, 0, 0};
+const Eigen::Vector3f EGG_OOB{0, 0, egg_zmax + 1};
 const TrackEggRidge ridge(720);
 }  // namespace
 
-Eigen::Vector3f egg_surface(float z, float theta) {
-  float ez = (z - egg_org_z) / egg_scale_z;
+Eigen::Vector3f scaled_egg_surface(float z, float theta) {
+  float ez = z / egg_scale_z;
   float r = 0;
   if (ez < egg_zmin) {
     return EGG_OOB;
@@ -23,10 +24,9 @@ Eigen::Vector3f egg_surface(float z, float theta) {
   } else {
     return EGG_OOB;
   }
-  const float zz = ez * egg_scale_z + egg_org_z;
-  const float xx = std::cos(theta) * r * egg_scale_x;
-  const float yy = std::sin(theta) * r * egg_scale_y;
-  return {xx, yy, zz};
+  const float xx = egg_scale_x * r * std::cos(theta);
+  const float yy = egg_scale_y * r * std::sin(theta);
+  return {xx, yy, z};
 }
 
 Eigen::Vector3f hole_surface(float azim, float elev, float r = hole_r) {
@@ -34,11 +34,13 @@ Eigen::Vector3f hole_surface(float azim, float elev, float r = hole_r) {
   pos[2] = (r * std::cos(elev)) * std::cos(azim);
   pos[0] = (r * std::cos(elev)) * std::sin(azim);
   pos[1] = (r * std::sin(elev));
-  return pos + ball_ctr;
+  // return pos + ball_ctr;
+  return pos;
 }
 
 std::tuple<float, float> hole_pos2azel(const Eigen::Vector3f &_pos) {
-  const Eigen::Vector3f pos = _pos - ball_ctr;
+  // const Eigen::Vector3f pos = _pos - ball_ctr;
+  const Eigen::Vector3f pos = _pos;
   const float r = std::sqrt(pos[2] * pos[2] + pos[0] * pos[0]);
   const float elev = std::atan2(pos[1], r);
   const float azim = std::atan2(pos[0], pos[2]);
@@ -47,21 +49,22 @@ std::tuple<float, float> hole_pos2azel(const Eigen::Vector3f &_pos) {
 
 bool is_inside_hole(const Eigen::Vector3f &pos) {
   constexpr float hole_r2 = hole_r * hole_r;
-  return (pos - ball_ctr).squaredNorm() <= hole_r2;
+  // return (pos - ball_ctr).squaredNorm() <= hole_r2;
+  return pos.squaredNorm() <= hole_r2;
 }
 
 // ===== 2. distance to egg surface for Fast Marching =====
-class DistanceToEggSurface : public vnl_cost_function {
+class DistanceToScaledEggSurface : public vnl_cost_function {
  private:
   Eigen::Vector3f pos_;
 
  public:
-  DistanceToEggSurface(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
+  DistanceToScaledEggSurface(const Eigen::Vector3f &pos) : pos_(pos), vnl_cost_function(2) {}
 
   double f(vnl_vector<double> const &x) override {
     const float z = x[0];
     const float theta = x[1];
-    const Eigen::Vector3f pos_egg = egg_surface(z, theta);
+    const Eigen::Vector3f pos_egg = scaled_egg_surface(z, theta);
     if (pos_egg == EGG_OOB) return 1e9;
     const float dist2 = (pos_ - pos_egg).squaredNorm();
     return dist2;
@@ -69,49 +72,54 @@ class DistanceToEggSurface : public vnl_cost_function {
 };
 
 std::tuple<float, Eigen::Vector3f> calc_dist_egg(const Eigen::Vector3f &pos) {
-  DistanceToEggSurface dist(pos);
+  const auto spos = egg_translate_bck(egg_rotate_bck(pos));
+  DistanceToScaledEggSurface dist(spos);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-6);
   minimizer.set_trace(true);
-  double z = pos[2];
+  float z = spos[2];
   {  // bring it inside the egg
-    z = std::max(z, egg_zmin + egg_org_z + 1.0);
-    z = std::min(z, egg_zmax + egg_org_z - 1.0);
+    z = std::max(z, egg_zmin + 1.0f);
+    z = std::min(z, egg_zmax - 1.0f);
   }
   vnl_vector<double> x(2);
   x[0] = z;
-  x[1] = atan2(pos[1], pos[0]);
+  x[1] = atan2(spos[1], spos[0]);
   minimizer.minimize(x);
-  const Eigen::Vector3f pos_egg = egg_surface(x[0], x[1]);
+  const Eigen::Vector3f spos_egg = scaled_egg_surface(x[0], x[1]);
+  const Eigen::Vector3f pos_egg = egg_rotate_fwd(egg_translate_fwd(spos_egg));
   // distance sign
-  const bool inside = ((pos - pos_egg).dot(pos_egg - Eigen::Vector3f(0, 0, egg_org_z)) < 0);
+  const bool inside = ((pos - pos_egg).dot(pos_egg - egg_org) < 0);
   const float dist2 = minimizer.get_end_error();
   const float _dist = std::sqrt(dist2) * ((inside) ? -1 : +1);
   return {_dist, pos_egg};
 }
 
 std::tuple<float, Eigen::Vector3f> calc_dist_hole(const Eigen::Vector3f &_pos) {
-  const Eigen::Vector3f pos = _pos - ball_ctr;
+  // const Eigen::Vector3f pos = _pos - ball_ctr;
+  const Eigen::Vector3f pos = _pos;
   const float pos_norm = pos.norm();
   const float dist = hole_r - pos_norm;  // inside hole --> positive, outside hole --> negative
-  const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm) + ball_ctr;
+  // const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm) + ball_ctr;
+  const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm);
   return {dist, pos_hole};
 }
 
-class DistanceToEggSurface_BallAzim_1pass : public vnl_cost_function {
+class DistanceToScaledEggSurface_BallAzim_1pass : public vnl_cost_function {
  private:
   float azim_;
 
  public:
-  DistanceToEggSurface_BallAzim_1pass(float azim) : azim_(azim), vnl_cost_function(3) {}
+  DistanceToScaledEggSurface_BallAzim_1pass(float azim) : azim_(azim), vnl_cost_function(3) {}
 
   double f(vnl_vector<double> const &x) override {
     const float elev = x[0];
     const float z = x[1];
     const float theta = x[2];
     if (elev < -M_PI / 2 || +M_PI / 2 < elev) return 1e9;
-    const Eigen::Vector3f pos_egg = egg_surface(z, theta);
-    if (pos_egg == EGG_OOB) return 1e9;
+    const Eigen::Vector3f spos_egg = scaled_egg_surface(z, theta);
+    if (spos_egg == EGG_OOB) return 1e9;
+    const Eigen::Vector3f pos_egg = egg_rotate_fwd(egg_translate_fwd(spos_egg));
     const Eigen::Vector3f pos_ball = hole_surface(azim_, elev);
     const float dist2 = (pos_ball - pos_egg).squaredNorm();
     return dist2;
@@ -119,36 +127,38 @@ class DistanceToEggSurface_BallAzim_1pass : public vnl_cost_function {
 };
 
 float calc_ball_elev_1pass(float azim) {
-  DistanceToEggSurface_BallAzim_1pass dist(azim);
+  DistanceToScaledEggSurface_BallAzim_1pass dist(azim);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-8);
   minimizer.set_trace(true);
-  const float elev0 = -15 * (M_PI / 180);
+  const float elev0 = deg2rad(-15);  // initial value
   const Eigen::Vector3f pos_ball0 = hole_surface(azim, elev0);
+  const Eigen::Vector3f spos_ball0 = egg_translate_bck(egg_rotate_bck(pos_ball0));
   vnl_vector<double> x(3);
   x[0] = elev0;
-  x[1] = pos_ball0[2];  // z
-  x[2] = 0;             // theta
+  x[1] = spos_ball0[2];  // z
+  x[2] = 0;              // theta
   minimizer.minimize(x);
   const float dist2 = minimizer.get_end_error();
   if (dist2 > 1e-5) std::cerr << "[ERROR] dist2 = " << dist2 << std::endl;
   return x[0];
 }
 
-class DistanceToEggSurface_BallAzim_2pass : public vnl_cost_function {
+class DistanceToScaledEggSurface_BallAzim_2pass : public vnl_cost_function {
  private:
   float azim_;
 
  public:
-  DistanceToEggSurface_BallAzim_2pass(float azim) : azim_(azim), vnl_cost_function(1) {}
+  DistanceToScaledEggSurface_BallAzim_2pass(float azim) : azim_(azim), vnl_cost_function(1) {}
 
   double f(vnl_vector<double> const &x) override {
     const float elev = x[0];
     if (elev < -M_PI / 2 || +M_PI / 2 < elev) return 1e9;
     const Eigen::Vector3f pos_ball = hole_surface(azim_, elev);
-    Eigen::Vector3f pos_egg;
+    const Eigen::Vector3f spos_ball = egg_translate_bck(egg_rotate_bck(pos_ball));
+    Eigen::Vector3f spos_egg;
     {
-      DistanceToEggSurface dist(pos_ball);
+      DistanceToScaledEggSurface dist(spos_ball);
       vnl_powell minimizer(&dist);
       minimizer.set_f_tolerance(1e-6);
       minimizer.set_trace(true);
@@ -156,15 +166,16 @@ class DistanceToEggSurface_BallAzim_2pass : public vnl_cost_function {
       _x[0] = pos_ball[2];
       _x[1] = atan2(pos_ball[1], pos_ball[0]);
       minimizer.minimize(_x);
-      pos_egg = egg_surface(_x[0], _x[1]);
+      spos_egg = scaled_egg_surface(_x[0], _x[1]);
     }
+    const Eigen::Vector3f pos_egg = egg_rotate_fwd(egg_translate_fwd(spos_egg));
     const float dist2 = (pos_ball - pos_egg).squaredNorm();
     return dist2;
   }
 };
 
 float calc_ball_elev_2pass(float azim) {
-  DistanceToEggSurface_BallAzim_2pass dist(azim);
+  DistanceToScaledEggSurface_BallAzim_2pass dist(azim);
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-8);
   minimizer.set_trace(true);
@@ -236,40 +247,43 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
   outside->Initialize();
   size_t cnt_seeds = 0;
   size_t cnt_outside = 0;
-  InternalImageType::IndexType pos;
+  InternalImageType::IndexType ipos;
   for (int iz = 0; iz < SizeZ; ++iz) {
-    pos[2] = iz;
+    ipos[2] = iz;
     const float z = spacing * (iz - SizeZ / 2);
-    const float sz = z * (1 / egg_scale_z);         // scaled for egg
-    const float ez = sz - egg_org_z / egg_scale_z;  // egg
-    const float ez2 = ez * ez;                      // egg^2
-    const float bz = z - ball_z;                    // ball
-    const float bz2 = bz * bz;                      // ball^2
+    const float bz = z;         // ball
+    const float bz2 = bz * bz;  // ball^2
     for (int iy = 0; iy < SizeY; ++iy) {
-      pos[1] = iy;
+      ipos[1] = iy;
       const float y = spacing * (iy - SizeY / 2);
-      const float ey = y * (1 / egg_scale_y);  // scaled for egg
-      const float ey2 = ey * ey;               // egg^2
-      const float by = y - ball_y;             // ball
-      const float by2 = by * by;               // ball^2
+      const float by = y;         // ball
+      const float by2 = by * by;  // ball^2
+
+      const auto [ty, tz] = egg_rotate_bck(y, z);
+      const auto [sy, sz] = egg_translate_bck(ty, tz);
+      const float ey = sy * (1 / egg_scale_y);  // scaled for egg
+      const float ez = sz * (1 / egg_scale_z);  // scaled for egg
+      const float ey2 = ey * ey;                // egg^2
+      const float ez2 = ez * ez;                // egg^2
       for (int ix = 0; ix < SizeX; ++ix) {
-        pos[0] = ix;
+        ipos[0] = ix;
         const float x = spacing * (ix - SizeX / 2);
+        const float bx = x;         // ball
+        const float bx2 = bx * bx;  // ball^2
+
         const float ex = x * (1 / egg_scale_x);  // scaled for egg
         const float ex2 = ex * ex;               // egg^2
-        const float bx = x;                      // ball
-        const float bx2 = bx * bx;               // ball^2
 
         // egg
         const float r2 = ex2 + ey2;
         float approx_dist_egg = std::numeric_limits<float>::max();
-        if (ez <= 0) {
+        if (ez <= 0) {  // bottom part
           approx_dist_egg = std::sqrt(r2 + ez2) - 1;
         } else {
           const float R = std::sqrt(r2) + 1;
-          if (std::atan2(ez, R) < egg_alpha) {
+          if (std::atan2(ez, R) < egg_alpha) {  // middle part
             approx_dist_egg = std::sqrt(R * R + ez2) - 2;
-          } else {
+          } else {  // top part
             const float dz_top = ez - egg_ztop;
             approx_dist_egg = std::sqrt(r2 + dz_top * dz_top) - egg_rad_top;
           }
@@ -283,7 +297,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
 
         /*
         0. 稜線を求める
-        1. egg_surface への最短位置を求める hole の外なら有効（最短距離＝ egg 面に垂直）
+        1. scaled_egg_surface への最短位置を求める hole の外なら有効（最短距離＝ egg 面に垂直）
         2. hole_surface への最短位置を求める。稜線より下なら有効（最短距離＝ ball 面に垂直）
         3-a. 1か2が両方も有効なら短い方を採用
         3-b. 1か2の片方が有効ならそれを採用？
@@ -295,7 +309,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
         */
         if (approx_dist_egg_pxl < 2 && dist_ball_pxl < 2) {
           NodeType node;
-          node.SetIndex(pos);
+          node.SetIndex(ipos);
           //   if (approx_dist_egg_pxl < -3.6 && dist_ball_pxl < -3.6) {
           // do nothing
           //   } else if (approx_dist_egg_pxl < -1.8 && dist_ball_pxl < -1.8) {

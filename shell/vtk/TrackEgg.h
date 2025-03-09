@@ -9,22 +9,55 @@
 #include <Eigen/Dense>
 #include <cmath>
 
-constexpr float mkw_r = 4.0;
+constexpr float ball_r = 57.2 / 2;
+constexpr float hole_r = ball_r + 2.5 / 2;
 constexpr float btm_h = 1;
 
-constexpr float egg_org_z = -25;
+// center = ball
+// center = [0, -30, hole_mkw_r + btm_h];
+constexpr float ball_z = -30;
+constexpr float ball_y = hole_r + btm_h;
 
-constexpr float ball_r = 57.2 / 2;
-constexpr float hole_r = ball_r + 2.5 / 2 + mkw_r;
+constexpr float egg_org_y = -ball_y;
+constexpr float egg_org_z = -ball_z;
+const Eigen::Vector3f egg_org{0, egg_org_y, egg_org_z};
 
-constexpr float ball_z = -36 + egg_org_z;
-constexpr float ball_y = ball_r + 2.5 / 2 + btm_h;
+inline constexpr float rad2deg(float rad) { return rad * 180.0f / float(M_PI); }
+inline constexpr float deg2rad(float deg) { return deg / 180.0f * float(M_PI); }
 
-constexpr float egg_scale_x = 35 - mkw_r;
-constexpr float egg_scale_y = 40 - mkw_r;
-constexpr float egg_scale_z = 80 - mkw_r;
+constexpr float egg_alpha = deg2rad(36);
+constexpr float egg_tilt = deg2rad(11);
+const float tilt_co = std::cos(egg_tilt);
+const float tilt_si = std::sin(egg_tilt);
 
-constexpr float egg_alpha = 36 / 180.0f * M_PI;
+inline std::tuple<float, float> egg_translate_fwd(float y, float z) { return {y + egg_org_y, z + egg_org_z}; }
+inline std::tuple<float, float> egg_translate_bck(float y, float z) { return {y - egg_org_y, z - egg_org_z}; }
+inline std::tuple<float, float> egg_rotate_fwd(float y, float z) { return {tilt_co * y + tilt_si * z, tilt_co * z - tilt_si * y}; }
+inline std::tuple<float, float> egg_rotate_bck(float y, float z) { return {tilt_co * y - tilt_si * z, tilt_co * z + tilt_si * y}; }
+
+inline Eigen::Vector3f egg_translate_fwd(const Eigen::Vector3f &pos) {
+  const auto [y, z] = egg_translate_fwd(pos[1], pos[2]);
+  return Eigen::Vector3f{pos[0], y, z};
+}
+inline Eigen::Vector3f egg_translate_bck(const Eigen::Vector3f &pos) {
+  const auto [y, z] = egg_translate_bck(pos[1], pos[2]);
+  return Eigen::Vector3f{pos[0], y, z};
+}
+inline Eigen::Vector3f egg_rotate_fwd(const Eigen::Vector3f &pos) {
+  const auto [y, z] = egg_rotate_fwd(pos[1], pos[2]);
+  return Eigen::Vector3f{pos[0], y, z};
+}
+inline Eigen::Vector3f egg_rotate_bck(const Eigen::Vector3f &pos) {
+  const auto [y, z] = egg_rotate_bck(pos[1], pos[2]);
+  return Eigen::Vector3f{pos[0], y, z};
+}
+
+constexpr float mkw_r = 3.0;
+
+constexpr float hole_mkw_r = hole_r + mkw_r;
+constexpr float egg_scale_x = 38 - mkw_r;
+constexpr float egg_scale_y = 42 - mkw_r;
+constexpr float egg_scale_z = 66 - mkw_r;
 
 const float egg_zbtm = 0;
 const float egg_ztop = std::tan(egg_alpha);
@@ -35,8 +68,8 @@ const float egg_zmax = egg_ztop + egg_rad_top;
 const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
-// constexpr float spacing = 1.0 / 1;
-constexpr float spacing = 3.0 / 4;
+constexpr float spacing = 1.0 / 1;
+// constexpr float spacing = 3.0 / 4;
 // constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(120 / spacing + 0.5f);
@@ -97,7 +130,7 @@ void Ball(vtkImageData *img) {
         const float x = spacing * (ix - SizeX / 2);
         const float dx = x;
         const float dx2 = dx * dx;
-        if (dx2 + dy2 + dz2 < hole_r * hole_r) {
+        if (dx2 + dy2 + dz2 < hole_mkw_r * hole_mkw_r) {
           ptr_y[ix] = -1;
         }
       }
