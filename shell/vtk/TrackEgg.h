@@ -75,22 +75,26 @@ constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(120 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);
 
+constexpr int OrigX = SizeX / 2;
+constexpr int OrigY = SizeY * 3 / 4;
+constexpr int OrigZ = SizeZ / 4;
+
 // ===== 1. inside / outside for Euclidean Distance Tranform =====
 template <typename T>
 void Egg(vtkImageData *img) {
   T *ptr_vol = (T *)img->GetScalarPointer();
   for (int iz = 0; iz < SizeZ; ++iz) {
     T *ptr_z = ptr_vol + SizeY * SizeX * iz;
-    const float z = spacing * (iz - SizeZ / 2);
+    const float z = spacing * (iz - OrigZ);
     const float sz = z * (1 / egg_scale_z);
     const float dz = sz - egg_org_z / egg_scale_z;
     for (int iy = 0; iy < SizeY; ++iy) {
       T *ptr_y = ptr_z + SizeX * iy;
-      const float y = spacing * (iy - SizeY / 2);
+      const float y = spacing * (iy - OrigY);
       const float sy = y * (1 / egg_scale_y);
       const float sy2 = sy * sy;
       for (int ix = 0; ix < SizeX; ++ix) {
-        const float x = spacing * (ix - SizeX / 2);
+        const float x = spacing * (ix - OrigX);
         const float sx = x * (1 / egg_scale_x);
         const float sx2 = sx * sx;
         const float r2 = sx2 + sy2;
@@ -118,16 +122,16 @@ void Ball(vtkImageData *img) {
   T *ptr_vol = (T *)img->GetScalarPointer();
   for (int iz = 0; iz < SizeZ; ++iz) {
     T *ptr_z = ptr_vol + SizeY * SizeX * iz;
-    const float z = spacing * (iz - SizeZ / 2);
+    const float z = spacing * (iz - OrigZ);
     const float dz = z - ball_z;
     const float dz2 = dz * dz;
     for (int iy = 0; iy < SizeY; ++iy) {
       T *ptr_y = ptr_z + SizeX * iy;
-      const float y = spacing * (iy - SizeY / 2);
+      const float y = spacing * (iy - OrigY);
       const float dy = y - ball_y;
       const float dy2 = dy * dy;
       for (int ix = 0; ix < SizeX; ++ix) {
-        const float x = spacing * (ix - SizeX / 2);
+        const float x = spacing * (ix - OrigX);
         const float dx = x;
         const float dx2 = dx * dx;
         if (dx2 + dy2 + dz2 < hole_mkw_r * hole_mkw_r) {

@@ -54,7 +54,7 @@ vtkNew<vtkImageData> createImageData(int scalar_type) {
   vtkNew<vtkImageData> data;
   data->SetDimensions(SizeX, SizeY, SizeZ);
   data->SetSpacing(spacing, spacing, spacing);
-  data->SetOrigin(-SizeX / 2 * spacing, -SizeY / 2 * spacing, -SizeZ / 2 * spacing - ball_z);
+  data->SetOrigin(-OrigX * spacing, -OrigY * spacing - ball_y, -OrigZ * spacing - ball_z);
   data->AllocateScalars(scalar_type, 1);
   const size_t mem_size = size_t(data->GetScalarSize()) * SizeX * SizeY * SizeZ;
   const size_t mem_size_MB = mem_size / 1024 / 1024;
@@ -107,9 +107,9 @@ int main(int argc, char *argv[]) {
       if (false) {
         typedef short T;
         T *ptr_vol = (T *)dist_data_sht->GetScalarPointer();
-        const int iz = SizeZ / 2;
+        const int iz = OrigZ;
         T *ptr_z = ptr_vol + SizeY * SizeX * iz;
-        const int iy = SizeY / 2;
+        const int iy = OrigY;
         T *ptr_y = ptr_z + SizeX * iy;
         for (int ix = 0; ix < SizeX; ++ix) {
           const T val = ptr_y[ix];
@@ -121,11 +121,11 @@ int main(int argc, char *argv[]) {
       if (false) {
         typedef short T;
         T *ptr_vol = (T *)dist_data_sht->GetScalarPointer();
-        const int iz = SizeZ / 2;
+        const int iz = OrigZ;
         T *ptr_z = ptr_vol + SizeY * SizeX * iz;
         for (int iy = 0; iy < SizeY; ++iy) {
           T *ptr_y = ptr_z + SizeX * iy;
-          const int ix = SizeX / 2;
+          const int ix = OrigX;
           const T val = ptr_y[ix];
           if (val) {
             std::cout << "iy = " << iy << ", dist = " << std::sqrt(val) << std::endl;
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
         for (double dy = -M; dy <= M; dy += 1) {
           for (double dx = -M; dx <= M; dx += 1) {
             InternalImageType::IndexType seedPosition;
-            seedPosition[0] = SizeX / 2 + dx;
-            seedPosition[1] = SizeY / 2 + dy;
-            seedPosition[2] = SizeZ / 2 + dz;
+            seedPosition[0] = OrigX + dx;
+            seedPosition[1] = OrigY + dy;
+            seedPosition[2] = OrigZ + dz;
             NodeType node;
             const double seedValue = sqrt(dx * dx + dy * dy + dz * dz);
             node.SetValue(seedValue);

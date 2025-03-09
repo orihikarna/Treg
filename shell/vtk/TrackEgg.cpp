@@ -250,12 +250,12 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
   InternalImageType::IndexType ipos;
   for (int iz = 0; iz < SizeZ; ++iz) {
     ipos[2] = iz;
-    const float z = spacing * (iz - SizeZ / 2);
+    const float z = spacing * (iz - OrigZ);
     const float bz = z;         // ball
     const float bz2 = bz * bz;  // ball^2
     for (int iy = 0; iy < SizeY; ++iy) {
       ipos[1] = iy;
-      const float y = spacing * (iy - SizeY / 2);
+      const float y = spacing * (iy - OrigY);
       const float by = y;         // ball
       const float by2 = by * by;  // ball^2
 
@@ -267,7 +267,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
       const float ez2 = ez * ez;                // egg^2
       for (int ix = 0; ix < SizeX; ++ix) {
         ipos[0] = ix;
-        const float x = spacing * (ix - SizeX / 2);
+        const float x = spacing * (ix - OrigX);
         const float bx = x;         // ball
         const float bx2 = bx * bx;  // ball^2
 
