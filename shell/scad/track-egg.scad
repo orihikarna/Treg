@@ -23,9 +23,9 @@ module shell_base() {
           rotate([-90, 0, 0])
             scale(egg_scale)
               // import("egg-42-4.stl");
-              egg(egg_btm_alpha, egg_top_alpha, 5);
+              egg(egg_btm_alpha, egg_top_alpha, 4);
     scale(hole_r)
-      import("icosphere-5.stl");
+      import("icosphere-4.stl");
   }
 }
 
@@ -133,10 +133,10 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  shell_base();
-// shell_3d_minkowski();
-// shell_2d_offset();
-// shell_vtk("../../surface-mkw=4_fm.stl");
+  // shell_base();
+  // shell_3d_minkowski();
+  // shell_2d_offset();
+  shell_vtk("../../surface-mkw=3.stl");
 }
 
 module button_section(extrude_h = 10, offset_r = 0) {
@@ -165,11 +165,39 @@ module button_section(extrude_h = 10, offset_r = 0) {
                   }
 }
 
+btn_offset = 28;
 module button_hole_left() {
-  translate([28, 0, 0]) {
-    button_section(10, 0.5);
-    mirror([1, 0, 0])
-      button_section(2, 2.5);
+  union() {
+    translate([btn_offset - 0.001, 0, 0])
+      button_section(10, 0.5);
+    translate([btn_offset, 0, 0]) {
+      mirror([1, 0, 0])
+        button_section(3, 2.5);
+    }
+  }
+}
+
+module treg_btn() {
+  difference() {
+    union() {
+      hull() {
+        btn_r = 1.0;
+        for(th = [0:10:90]) {
+          dx = btn_r * sin(th);
+          translate([dx, 0, 0])
+            intersection() {
+              shell();
+              translate([btn_offset - dx, 0, 0])
+                button_section(12, btn_r * (cos(th) - 1));
+            }
+        }
+      }
+      translate([btn_offset, 0, 0])
+        mirror([1, 0, 0])
+          button_section(2.0, 2.0);
+    }
+    translate([0, 0, -200 - center[2]])
+      cube(400, center = true);
   }
 }
 
@@ -178,16 +206,19 @@ module treg_top() {
     shell();
     translate([0, 0, -200 - center[2]])
       cube(400, center = true);
+    support_ball_holes();
     button_hole_left();
     mirror([1, 0, 0])
       button_hole_left();
   }
 }
 
-difference() {
-  treg_top();
-  support_ball_holes();
-}
+treg_top();
+// translate([13, 0, 0])
+//   treg_btn();
+// mirror([1, 0, 0])
+//   translate([13, 0, 0])
+//     treg_btn();
 
 // ball
 if (false)
