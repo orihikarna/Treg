@@ -14,7 +14,7 @@ constexpr float hole_r = ball_r + 2.5 / 2;
 constexpr float btm_h = 1;
 
 // center = ball
-// center = [0, -30, hole_mkw_r + btm_h];
+// center = [0, -30, hole_r + btm_h];
 constexpr float ball_z = -30;
 constexpr float ball_y = hole_r + btm_h;
 

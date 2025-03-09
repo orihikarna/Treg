@@ -29,7 +29,7 @@ Eigen::Vector3f scaled_egg_surface(float z, float theta) {
   return {xx, yy, z};
 }
 
-Eigen::Vector3f hole_surface(float azim, float elev, float r = hole_r) {
+Eigen::Vector3f hole_surface(float azim, float elev, float r = hole_mkw_r) {
   Eigen::Vector3f pos;
   pos[2] = (r * std::cos(elev)) * std::cos(azim);
   pos[0] = (r * std::cos(elev)) * std::sin(azim);
@@ -48,7 +48,7 @@ std::tuple<float, float> hole_pos2azel(const Eigen::Vector3f &_pos) {
 }
 
 bool is_inside_hole(const Eigen::Vector3f &pos) {
-  constexpr float hole_r2 = hole_r * hole_r;
+  constexpr float hole_r2 = hole_mkw_r * hole_mkw_r;
   // return (pos - ball_ctr).squaredNorm() <= hole_r2;
   return pos.squaredNorm() <= hole_r2;
 }
@@ -99,9 +99,9 @@ std::tuple<float, Eigen::Vector3f> calc_dist_hole(const Eigen::Vector3f &_pos) {
   // const Eigen::Vector3f pos = _pos - ball_ctr;
   const Eigen::Vector3f pos = _pos;
   const float pos_norm = pos.norm();
-  const float dist = hole_r - pos_norm;  // inside hole --> positive, outside hole --> negative
-  // const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm) + ball_ctr;
-  const Eigen::Vector3f pos_hole = pos * (hole_r / pos_norm);
+  const float dist = hole_mkw_r - pos_norm;  // inside hole --> positive, outside hole --> negative
+  // const Eigen::Vector3f pos_hole = pos * (hole_mkw_r / pos_norm) + ball_ctr;
+  const Eigen::Vector3f pos_hole = pos * (hole_mkw_r / pos_norm);
   return {dist, pos_hole};
 }
 
@@ -292,7 +292,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
         // inside egg negative, outside egg positive
 
         // ball
-        const float dist_ball = hole_r - std::sqrt(bx2 + by2 + bz2);  // inside positive, outside negative
+        const float dist_ball = hole_mkw_r - std::sqrt(bx2 + by2 + bz2);  // inside positive, outside negative
         const float dist_ball_pxl = dist_ball / spacing;
 
         /*
