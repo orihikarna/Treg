@@ -133,47 +133,69 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  // shell_base();
-  // shell_3d_minkowski();
-  // shell_2d_offset();
-  shell_vtk("../../surface-mkw=3.stl");
+  shell_base();
+// shell_3d_minkowski();
+// shell_2d_offset();
+// shell_vtk("../../surface-mkw=3.stl");
 }
 
+btn_offset_x = 28;
+btn_offset_y = 32;
+btn_ear_thick = 3;
+
 module button_section(extrude_h = 10, offset_r = 0) {
-  translate([0, 32, 2 - center[2]])
+  translate([0, btn_offset_y, 2 - center[2]])
     rotate([8, 0, 0])
       rotate([0, -90, 0])
         rotate([180, 0, 0])
           linear_extrude(extrude_h)
             offset(offset_r)
               scale(18)
-                if (true)
-                  egg_2d(0, 45);
-                else
-                  hull() {
-                    intersection() {
-                      translate([+2, 0])
-                        square(4, center = true);
-                      egg_2d(0, 45);
-                    }
-                    intersection() {
-                      translate([-2, 0])
-                        square(4, center = true);
-                      scale([1, 1])
-                        egg_2d(0, 45);
-                    }
-                  }
+                egg_2d(0, 45);
 }
 
-btn_offset = 28;
+switch_d1 = 7.6;
+switch_d2 = 2.4;
+
+module switch_hole_section() {
+  // switch 6 (body) + 3.4 (pins)
+  // pcb = 1.6
+  // --> 7.6 + 2.4
+  mirror([1, 0, 0])
+    union() {
+      translate([switch_d1 / 2, 0, 0])
+        square([switch_d1, 30.4], center = true);
+      translate([switch_d1 + switch_d2 / 2 - 0.01, 0, 0])
+        square([switch_d2, 18], center = true);
+    }
+}
+
+module switch_hole() {
+  h = 8.8;
+  translate([btn_offset_x - btn_ear_thick + 0.01, btn_offset_y - 2, -center[2] - 0.01]) {
+    linear_extrude(h)
+      switch_hole_section();
+    translate([-switch_d1, +12, h / 2])
+      rotate([0, +90, 0])
+        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
+    translate([-switch_d1, -12, h / 2])
+      rotate([0, +90, 0])
+        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
+  // translate([0, 0, h - 0.01])
+  //   linear_extrude(12, scale = 0)
+  //     switch_hole_section();
+  }
+}
+
 module button_hole_left() {
   union() {
-    translate([btn_offset - 0.001, 0, 0])
-      button_section(10, 0.5);
-    translate([btn_offset, 0, 0]) {
+    translate([btn_offset_x - 0.01, 0, 0])
+      button_section(12, 0.5);
+    translate([btn_offset_x, 0, 0]) {
       mirror([1, 0, 0])
-        button_section(3, 2.5);
+        button_section(btn_ear_thick, 2.5);
     }
+    switch_hole();
   }
 }
 
