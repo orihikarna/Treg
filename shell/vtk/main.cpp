@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
       fastMarching->SetOutsidePoints(outside);
     }
     dumpMemoryUsage("fast marching");
-    const double stoppingTime = 2 * mkw_r / spacing;
+    const double stoppingTime = mkw_r / spacing + 2;
     const itk::Size<3> size{SizeX, SizeY, SizeZ};
     fastMarching->SetOutputSize(size);
     fastMarching->SetSpeedConstant(1.0);

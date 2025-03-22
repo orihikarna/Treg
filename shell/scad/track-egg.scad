@@ -133,14 +133,14 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  shell_base();
-// shell_3d_minkowski();
-// shell_2d_offset();
-// shell_vtk("../../surface-mkw=3.stl");
+  // shell_base();
+  // shell_3d_minkowski();
+  // shell_2d_offset();
+  shell_vtk("../../surface-mkw=1.6.stl");
 }
 
-btn_offset_x = 28;
-btn_offset_y = 32;
+btn_offset_x = 30;
+btn_offset_y = 33;
 btn_ear_thick = 3;
 
 module button_section(extrude_h = 10, offset_r = 0) {
@@ -172,15 +172,15 @@ module switch_hole_section() {
 
 module switch_hole() {
   h = 8.8;
-  translate([btn_offset_x - btn_ear_thick + 0.01, btn_offset_y - 2, -center[2] - 0.01]) {
+  translate([btn_offset_x - btn_ear_thick + 0.01, btn_offset_y - 3, -center[2] - 0.01]) {
     linear_extrude(h)
       switch_hole_section();
     translate([-switch_d1, +12, h / 2])
       rotate([0, +90, 0])
-        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
+        cylinder(d = 2.2, h = 8, $fn = 6, center = true);
     translate([-switch_d1, -12, h / 2])
       rotate([0, +90, 0])
-        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
+        cylinder(d = 2.2, h = 8, $fn = 6, center = true);
   // translate([0, 0, h - 0.01])
   //   linear_extrude(12, scale = 0)
   //     switch_hole_section();

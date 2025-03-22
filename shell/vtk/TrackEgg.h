@@ -11,7 +11,7 @@
 
 constexpr float ball_r = 57.2 / 2;
 constexpr float hole_r = ball_r + 2.5 / 2;
-constexpr float btm_h = 1;
+constexpr float btm_h = -0;
 
 // center = ball
 // center = [0, -30, hole_r + btm_h];
@@ -52,7 +52,7 @@ inline Eigen::Vector3f egg_rotate_bck(const Eigen::Vector3f &pos) {
   return Eigen::Vector3f{pos[0], y, z};
 }
 
-constexpr float mkw_r = 3.0;
+constexpr float mkw_r = 1.6;
 
 constexpr float hole_mkw_r = hole_r + mkw_r;
 constexpr float egg_scale_x = 38 - mkw_r;
@@ -68,8 +68,8 @@ const float egg_zmax = egg_ztop + egg_rad_top;
 const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
-constexpr float spacing = 1.0 / 1;
-// constexpr float spacing = 3.0 / 4;
+// constexpr float spacing = 1.0 / 1;
+constexpr float spacing = 3.0 / 4;
 // constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(120 / spacing + 0.5f);

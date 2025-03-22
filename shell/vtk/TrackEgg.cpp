@@ -179,12 +179,12 @@ float calc_ball_elev_2pass(float azim) {
   vnl_powell minimizer(&dist);
   minimizer.set_f_tolerance(1e-8);
   minimizer.set_trace(true);
-  const float elev0 = -15 * (M_PI / 180);
+  const float elev0 = deg2rad(-25);
   vnl_vector<double> x(1);
   x[0] = elev0;
   minimizer.minimize(x);
   const float dist2 = minimizer.get_end_error();
-  if (dist2 > 1e-5) std::cerr << "[ERROR] dist2 = " << dist2 << std::endl;
+  if (dist2 > 1e-5) std::cerr << "[ERROR] dist2 = " << dist2 << ", azim = " << azim << std::endl;
   return x[0];
 }
 
@@ -331,7 +331,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
             const bool hole_foot_valid = ridge.IsOnHoleSurface(azim, elev);
 
             float dist = std::numeric_limits<float>::max();
-            if (dist_egg_pxl < 0 && dist_hole_pxl < 0) {  // inside track-egg
+            if (dist_egg_pxl < 0 && dist_hole_pxl < 0) {  // inside track - egg
               dist = -std::numeric_limits<float>::max();
               if (egg_foot_valid) dist = std::max(dist, dist_egg_pxl);
               if (hole_foot_valid) dist = std::max(dist, dist_hole_pxl);
@@ -343,7 +343,7 @@ std::tuple<NodeContainer::Pointer, NodeContainer::Pointer> TrackEggSeeds() {
                 // std::cerr << "(" << __LINE__ << ") hole_foot_valid = false" << std::endl;
                 // throw;
               }
-            } else {  // outside track_egg
+            } else {  // outside track - egg
               if (dist_egg_pxl >= 0 && egg_foot_valid) dist = std::min(dist, dist_egg_pxl);
               if (dist_hole_pxl >= 0 && hole_foot_valid) dist = std::min(dist, dist_hole_pxl);
               dist = std::min(dist, ridge.CalcMinDist(pos) / spacing);
