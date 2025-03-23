@@ -133,15 +133,19 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  // shell_base();
-  // shell_3d_minkowski();
-  // shell_2d_offset();
-  shell_vtk("../../surface-mkw=1.6.stl");
+  shell_base();
+// shell_3d_minkowski();
+// shell_2d_offset();
+// shell_vtk("../../surface-mkw=1.6.stl");
 }
 
 btn_offset_x = 30;
-btn_offset_y = 33;
-btn_ear_thick = 3;
+btn_offset_y = 27;
+btn_ear_thick = 1.6;
+btn_ear_roffset = 1.6;
+btn_ear_hole_thick = 2.6;
+btn_ear_hole_gap = 0.3;
+btn_ear_hole_roffset = 2.0;
 
 module button_section(extrude_h = 10, offset_r = 0) {
   translate([0, btn_offset_y, 2 - center[2]])
@@ -172,7 +176,7 @@ module switch_hole_section() {
 
 module switch_hole() {
   h = 8.8;
-  translate([btn_offset_x - btn_ear_thick + 0.01, btn_offset_y - 3, -center[2] - 0.01]) {
+  translate([btn_offset_x - btn_ear_hole_thick + 0.01, btn_offset_y - 3, -center[2] - 0.01]) {
     linear_extrude(h)
       switch_hole_section();
     translate([-switch_d1, +12, h / 2])
@@ -190,10 +194,10 @@ module switch_hole() {
 module button_hole_left() {
   union() {
     translate([btn_offset_x - 0.01, 0, 0])
-      button_section(12, 0.5);
+      button_section(12, btn_ear_hole_gap);
     translate([btn_offset_x, 0, 0]) {
       mirror([1, 0, 0])
-        button_section(btn_ear_thick, 2.5);
+        button_section(btn_ear_hole_thick, btn_ear_hole_roffset);
     }
     switch_hole();
   }
@@ -209,14 +213,14 @@ module treg_btn() {
           translate([dx, 0, 0])
             intersection() {
               shell();
-              translate([btn_offset - dx, 0, 0])
+              translate([btn_offset_x - dx, 0, 0])
                 button_section(12, btn_r * (cos(th) - 1));
             }
         }
       }
-      translate([btn_offset, 0, 0])
+      translate([btn_offset_x, 0, 0])
         mirror([1, 0, 0])
-          button_section(2.0, 2.0);
+          button_section(btn_ear_thick, btn_ear_roffset);
     }
     translate([0, 0, -200 - center[2]])
       cube(400, center = true);
@@ -235,7 +239,11 @@ module treg_top() {
   }
 }
 
-treg_top();
+intersection() {
+  treg_top();
+// translate([0, 0, -200 - 15])
+//   cube(400, center = true);
+}
 // translate([13, 0, 0])
 //   treg_btn();
 // mirror([1, 0, 0])
