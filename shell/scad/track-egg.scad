@@ -144,11 +144,11 @@ module shell() {
 
 btn_offset_x = 30;
 btn_offset_y = 27;
-btn_ear_thick = 1.6;
-btn_ear_roffset = 1.6;
-btn_ear_hole_thick = 2.6;
 btn_ear_hole_gap = 0.3;
-btn_ear_hole_roffset = 2.0;
+btn_ear_thick = 1.6;
+btn_ear_hole_thick = 2.6;
+btn_ear_roffset = 1.6;
+btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
 
 module button_section(extrude_h = 10, offset_r = 0) {
   translate([0, btn_offset_y, 2 - center[2]])
@@ -202,7 +202,12 @@ module button_hole_left() {
     // innder side
     translate([btn_offset_x, 0, 0]) {
       mirror([1, 0, 0])
-        button_section(btn_ear_hole_thick, btn_ear_hole_roffset);
+        hull() {
+          d = btn_ear_roffset * 0.8;// same as in treg_btn()
+          button_section(0.1, btn_ear_hole_gap);
+          translate([d, 0, 0])
+            button_section(btn_ear_hole_thick - d, btn_ear_hole_roffset);
+        }
     }
     switch_hole();
   }
@@ -224,8 +229,14 @@ module treg_btn() {
         }
       }
       translate([btn_offset_x, 0, 0])
-        mirror([1, 0, 0])
-          button_section(btn_ear_thick, btn_ear_roffset);
+        mirror([1, 0, 0]) {
+          hull() {
+            d = btn_ear_roffset * 0.8;
+            button_section(0.1, 0);
+            translate([d, 0, 0])
+              button_section(btn_ear_thick - d, btn_ear_roffset);
+          }
+        }
     }
     translate([0, 0, -200 - center[2]])
       cube(400, center = true);
