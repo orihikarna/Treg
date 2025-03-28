@@ -159,8 +159,8 @@ module button_section(extrude_h = 10, offset_r = 0) {
                 egg_2d(0, 45);
 }
 
-switch_d1 = 7.6;
-switch_d2 = 2.4;
+switch_d1 = 8.0;
+switch_d2 = 3.0;
 
 module switch_hole_section() {
   // switch 6 (body) + 3.4 (pins)
@@ -169,7 +169,7 @@ module switch_hole_section() {
   mirror([1, 0, 0])
     union() {
       translate([switch_d1 / 2, 0, 0])
-        square([switch_d1, 30.4], center = true);
+        square([switch_d1, 32.0], center = true);
       translate([switch_d1 + switch_d2 / 2 - 0.01, 0, 0])
         square([switch_d2, 18], center = true);
     }
