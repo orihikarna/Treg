@@ -5,6 +5,8 @@ include <params.scad>
 // include <icosphere.scad>
 include <egg.scad>
 
+_clr = 0.01;
+
 module support_ball_holes() {
   for(i = [0:2])
     rotate([0, 0, 120 * i])
@@ -168,17 +170,17 @@ module switch_hole_section() {
   // --> 7.6 + 2.4
   mirror([1, 0, 0])
     union() {
-      translate([switch_d1 / 2, 0, 0])
-        square([switch_d1, 32.0], center = true);
-      translate([switch_d1 + switch_d2 / 2 - 0.01, 0, 0])
-        square([switch_d2, 18], center = true);
+      translate([switch_d1 / 2 - _clr, 0, 0])
+        square([switch_d1 + _clr * 2, 32.0], center = true);
+      translate([switch_d1 + switch_d2 / 2 - _clr, 0, 0])
+        square([switch_d2 + _clr * 2, 18], center = true);
     }
 }
 
 module switch_hole() {
   h = 8.8;
-  translate([btn_offset_x - btn_ear_hole_thick + 0.01, btn_offset_y - 3, -center[2] - 0.01]) {
-    linear_extrude(h)
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y - 3, -center[2] - _clr]) {
+    linear_extrude(h + _clr)
       switch_hole_section();
     translate([-switch_d1, +12, h / 2])
       rotate([0, +90, 0])
@@ -194,8 +196,10 @@ module switch_hole() {
 
 module button_hole_left() {
   union() {
-    translate([btn_offset_x - 0.01, 0, 0])
+    // outer side
+    translate([btn_offset_x - _clr, 0, 0])
       button_section(16, btn_ear_hole_gap);
+    // innder side
     translate([btn_offset_x, 0, 0]) {
       mirror([1, 0, 0])
         button_section(btn_ear_hole_thick, btn_ear_hole_roffset);
