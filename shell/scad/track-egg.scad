@@ -9,10 +9,11 @@ module support_ball_holes() {
   for(i = [0:2])
     rotate([0, 0, 120 * i])
       rotate([-50, 0, 0])
-        translate([0, 0, -hole_r])
-          scale(1.25)
-            // import("icosphere-3.stl");
-            cylinder(h = 2.2, r = 1, center = true, $fn = 64);
+        translate([0, 0, -hole_r]) {
+          cylinder(h = 2.5, d = 2.5, center = true, $fn = 64);
+          translate([0, 0, -20])
+            cylinder(h = 40, d = 1.8, center = true, $fn = 64);
+        }
 }
 
 module shell_base() {
@@ -194,7 +195,7 @@ module switch_hole() {
 module button_hole_left() {
   union() {
     translate([btn_offset_x - 0.01, 0, 0])
-      button_section(12, btn_ear_hole_gap);
+      button_section(16, btn_ear_hole_gap);
     translate([btn_offset_x, 0, 0]) {
       mirror([1, 0, 0])
         button_section(btn_ear_hole_thick, btn_ear_hole_roffset);
@@ -207,14 +208,14 @@ module treg_btn() {
   difference() {
     union() {
       hull() {
-        btn_r = 1.0;
+        btn_r = 1.6;
         for(th = [0:10:90]) {
           dx = btn_r * sin(th);
           translate([dx, 0, 0])
             intersection() {
               shell();
               translate([btn_offset_x - dx, 0, 0])
-                button_section(12, btn_r * (cos(th) - 1));
+                button_section(16, btn_r * (cos(th) - 1));
             }
         }
       }
@@ -244,7 +245,7 @@ intersection() {
 // translate([0, 0, -200 - 15])
 //   cube(400, center = true);
 }
-// translate([13, 0, 0])
+// translate([0, 0, 0])
 //   treg_btn();
 // mirror([1, 0, 0])
 //   translate([13, 0, 0])
