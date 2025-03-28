@@ -2,11 +2,11 @@ ball_r = 57.2 / 2;
 hole_r = ball_r + 2.5 / 2;
 btm_h = 0 + 0;
 
-center = [0, -30, hole_r + btm_h];
+center = [0, -31, hole_r + btm_h];
 egg_btm_alpha = 0;
 egg_top_alpha = 36;
-egg_scale = [38, 42, 66];
-egg_tilt = 11;
+egg_scale = [38, 42, 68];
+egg_tilt = 12;
 
 mkw_r = 3;
 
