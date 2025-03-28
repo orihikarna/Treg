@@ -1,6 +1,7 @@
 ball_r = 57.2 / 2;
 hole_r = ball_r + 2.5 / 2;
 btm_h = 0 + 0;
+base_h = 9;// + 1;
 
 center = [0, -31, hole_r + btm_h];
 egg_btm_alpha = 0;
