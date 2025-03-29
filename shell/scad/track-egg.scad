@@ -9,7 +9,7 @@ _clr = 0.01;
 
 module support_ball_holes() {
   for(i = [0:2])
-    rotate([0, 0, 120 * i])
+    rotate([0, 0, 120 * i - 60])
       rotate([-50, 0, 0])
         translate([0, 0, -hole_r]) {
           cylinder(h = 2.5, d = 2.5, center = true, $fn = 64);
