@@ -246,7 +246,7 @@ module treg_btn() {
           }
         }
     }
-    translate([0, 0, -200 - center[2]])
+    translate([0, 0, -200 - center[2] - base_h])
       cube(400, center = true);
   }
 }
@@ -264,12 +264,12 @@ module treg_top() {
 }
 
 intersection() {
-  treg_top();
+// treg_top();
 // translate([0, 0, -200 - 15])
 //   cube(400, center = true);
 }
 // translate([0, 0, 0])
-//   treg_btn();
+treg_btn();
 // mirror([1, 0, 0])
 //   translate([13, 0, 0])
 //     treg_btn();
