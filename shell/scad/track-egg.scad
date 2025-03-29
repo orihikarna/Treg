@@ -171,7 +171,7 @@ module switch_hole_section() {
   mirror([1, 0, 0])
     union() {
       translate([switch_d1 / 2 - _clr, 0, 0])
-        square([switch_d1 + _clr * 2, 32.0], center = true);
+        square([switch_d1 + _clr * 2, 30.6], center = true);
       translate([switch_d1 + switch_d2 / 2 - _clr, 0, 0])
         square([switch_d2 + _clr * 2, 18], center = true);
     }
