@@ -183,6 +183,9 @@ module switch_hole() {
     translate([0, 0, -base_h])
       linear_extrude(h + _clr + base_h)
         switch_hole_section();
+    translate([0, 0, h])
+      linear_extrude(12, scale = 0.1)
+        switch_hole_section();
     translate([-switch_d1, +12, h / 2])
       rotate([0, +90, 0])
         cylinder(d = 2.0, h = 8, $fn = 6, center = true);
