@@ -10,12 +10,13 @@
 #include <cmath>
 
 constexpr float ball_r = 57.2 / 2;
-constexpr float hole_r = ball_r + 2.5 / 2;
-constexpr float btm_h = -0;
+constexpr float hole_r = ball_r + 2.4 / 2;
+constexpr float btm_h = 0;
+constexpr float base_h = 9;
 
 // center = ball
 // center = [0, -30, hole_r + btm_h];
-constexpr float ball_z = -30;
+constexpr float ball_z = -31;
 constexpr float ball_y = hole_r + btm_h;
 
 constexpr float egg_org_y = -ball_y;
@@ -26,7 +27,7 @@ inline constexpr float rad2deg(float rad) { return rad * 180.0f / float(M_PI); }
 inline constexpr float deg2rad(float deg) { return deg / 180.0f * float(M_PI); }
 
 constexpr float egg_alpha = deg2rad(36);
-constexpr float egg_tilt = deg2rad(11);
+constexpr float egg_tilt = deg2rad(12);
 const float tilt_co = std::cos(egg_tilt);
 const float tilt_si = std::sin(egg_tilt);
 
@@ -57,7 +58,7 @@ constexpr float mkw_r = 1.6;
 constexpr float hole_mkw_r = hole_r + mkw_r;
 constexpr float egg_scale_x = 38 - mkw_r;
 constexpr float egg_scale_y = 42 - mkw_r;
-constexpr float egg_scale_z = 66 - mkw_r;
+constexpr float egg_scale_z = 68 - mkw_r;
 
 const float egg_zbtm = 0;
 const float egg_ztop = std::tan(egg_alpha);
@@ -69,8 +70,8 @@ const float egg_zedge_btm = 0;
 const float egg_zedge_top = 2 * std::sin(egg_alpha);
 
 // constexpr float spacing = 1.0 / 1;
-constexpr float spacing = 3.0 / 4;
-// constexpr float spacing = 2.0 / 3;
+// constexpr float spacing = 3.0 / 4;
+constexpr float spacing = 2.0 / 3;
 constexpr int SizeX = int(110 / spacing + 0.5f);
 constexpr int SizeY = int(120 / spacing + 0.5f);
 constexpr int SizeZ = int(220 / spacing + 0.5f);

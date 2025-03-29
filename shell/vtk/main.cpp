@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
     const float *pin = dist->GetBufferPointer();
     float *pout = (float *)dist_data_filter->GetScalarPointer();
     for (size_t n = 0; n < num; ++n) {
-      pout[n] = -pin[n] / spacing * 1024;
+      pout[n] = -(pin[n] / spacing - 1) * 1024;
       // pout[n] = -pin[n];
     }
   }
