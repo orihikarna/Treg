@@ -185,10 +185,10 @@ module switch_hole() {
         switch_hole_section();
     translate([-switch_d1, +12, h / 2])
       rotate([0, +90, 0])
-        cylinder(d = 2.1, h = 8, $fn = 6, center = true);
+        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
     translate([-switch_d1, -12, h / 2])
       rotate([0, +90, 0])
-        cylinder(d = 2.1, h = 8, $fn = 6, center = true);
+        cylinder(d = 2.0, h = 8, $fn = 6, center = true);
   }
 }
 
