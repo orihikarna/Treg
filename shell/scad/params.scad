@@ -3,7 +3,7 @@ hole_r = ball_r + 2.4 / 2;
 btm_h = 0 + 0;
 base_h = 9;// + 1;
 
-center = [0, -31, hole_r + btm_h];
+center = [0, -30, hole_r + btm_h];
 egg_btm_alpha = 0;
 egg_top_alpha = 36;
 egg_scale = [38, 42, 68];

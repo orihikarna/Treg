@@ -143,7 +143,7 @@ module shell() {
 }
 
 btn_offset_x = 30;
-btn_offset_y = 27;
+btn_offset_y = 24;
 btn_ear_hole_gap = 0.3;
 btn_ear_thick = 1.6;
 btn_ear_hole_thick = 2.6;
@@ -151,14 +151,13 @@ btn_ear_roffset = 1.6;
 btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
 
 module button_section(extrude_h = 10, offset_r = 0) {
-  translate([0, btn_offset_y, 2 - center[2]])
-    rotate([8, 0, 0])
-      rotate([0, -90, 0])
-        rotate([180, 0, 0])
-          linear_extrude(extrude_h)
-            offset(offset_r)
-              scale(18)
-                egg_2d(0, 45);
+  translate([0, btn_offset_y, -2 - center[2]])
+    rotate([60, 0, 0])
+      rotate([0, +90, 0])
+        linear_extrude(extrude_h)
+          offset(offset_r)
+            scale(20)
+              egg_2d(0, 45);
 }
 
 switch_d1 = 8.0;
@@ -216,10 +215,10 @@ module button_ear_hole_left() {
 module button_hole_left() {
   union() {
     button_ear_hole_left();
-    translate([0, 0, -center[2] - base_h - _clr])
-      linear_extrude(base_h + _clr)
-        projection(cut = false)
-          button_ear_hole_left();
+      translate([0, 0, -center[2] - base_h - _clr])
+        linear_extrude(base_h + _clr)
+          projection(cut = false)
+            button_ear_hole_left();
     switch_hole();
   }
 }
