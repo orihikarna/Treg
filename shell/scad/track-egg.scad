@@ -1,146 +1,5 @@
-// center: [0, tan(alpha)]
-// radius: 2 - sec(alpha)
-// alpha: [0, pi/4]
-include <params.scad>
-// include <icosphere.scad>
-include <egg.scad>
+include <track-shell.scad>
 
-_clr = 0.01;
-
-module support_ball_holes() {
-  for(i = [0:2])
-    rotate([0, 0, 120 * i - 60])
-      rotate([-50, 0, 0])
-        translate([0, 0, -hole_r]) {
-          cylinder(h = 2.5, d = 2.5, center = true, $fn = 64);
-          translate([0, 0, -20])
-            cylinder(h = 40, d = 1.8, center = true, $fn = 64);
-        }
-}
-
-module shell_base() {
-  difference() {
-    rotate([egg_tilt, 0, 0])
-      translate(-center)
-        translate([0, 0, btm_h])
-          rotate([-90, 0, 0])
-            scale(egg_scale)
-              // import("egg-42-4.stl");
-              egg(egg_btm_alpha, egg_top_alpha, 4);
-    scale(hole_r)
-      import("icosphere-4.stl");
-  }
-}
-
-module shell_3d_minkowski() {
-  difference() {
-    minkowski() {
-      difference() {
-        rotate([egg_tilt, 0, 0])
-          translate(-center)
-            translate([0, 0, btm_h])
-              rotate([-90, 0, 0])
-                scale(egg_mkw_scale)
-                  import("egg-42-2.stl");
-        scale(hole_mkw_r)
-          import("icosphere-2.stl");
-      }
-      scale(mkw_r)
-        import("icosphere-1.stl");
-    }
-  }
-}
-
-tilt = -24;
-
-module egg_base() {
-  rotate([tilt, 0, 0])
-    translate(-center)
-      rotate([-90, 0, 0])
-        scale(egg_mkw_scale)
-          import("egg-42-4.stl");
-}
-
-dazim = 12;
-delev = 12;
-
-r = 300;
-th = delev / 2;
-x = r * sin(th);
-y = r * cos(th);
-module elev_triangle() {
-  pnts = [
-    [0, 0], 
-    [+x, y], 
-    [-x, y]
-  ];
-  polygon(pnts);
-}
-
-module azim_slice(azim) {
-  intersection() {
-    offset(mkw_r)
-      difference() {
-        projection(cut = true)
-          rotate([0, 90, 0])
-            rotate([0, 0, azim])
-              children();
-        circle(r = hole_mkw_r);
-      }
-  }
-}
-
-module elev_section(elev, thick = 1) {
-  rotate([0, 0, -elev])
-    translate([0, 0, -thick / 2])
-      linear_extrude(thick, scale = 1)
-        intersection() {
-          rotate([0, 0, elev])
-            children();
-          elev_triangle();
-        }
-}
-
-module half_track_egg() {
-  rotate([-tilt, 0, 0])
-    union()
-      for(azim0 = [dazim / 2:dazim:180])
-        union()
-          for(elev = [-90 + delev / 2:delev / 2:90])
-            hull()
-              for(sgn = [-1, +1]) {
-                azim = azim0 + sgn * dazim / 2;
-                rotate([0, 0, -azim])
-                  rotate([0, -90, 0])
-                    elev_section(elev)
-                      azim_slice(azim)
-                        egg_base();
-              }
-}
-
-module shell_2d_offset() {
-  rotate([egg_tilt, 0, 0])
-    union() {
-      half_track_egg();
-      mirror([1, 0, 0])
-        half_track_egg();
-    }
-}
-
-module shell_vtk(path) {
-  translate([0, 0, btm_h])
-    // rotate([0, 0, 180])
-    rotate([0, 180, 0])
-      rotate([-90, 0, 0])
-        import(path);
-}
-
-module shell() {
-  shell_base();
-// shell_3d_minkowski();
-// shell_2d_offset();
-// shell_vtk("../../surface-mkw=1.6.stl");
-}
 
 btn_offset_x = 31;
 btn_offset_y = 24;
@@ -198,6 +57,22 @@ module button_section(extrude_h = 10, offset_r = 0) {
               egg_2d(0, 45);
 }
 
+module button_support(incr_xy = 0, incr_z = 0) {
+  x1 = 10;
+  y1 = 4;
+  h1 = 1;
+  x2 = 3;
+  y2 = 7;
+  h2 = 2;
+  translate([btn_offset_x, btn_offset_y, -center[2] - base_h])
+    mirror([1, 0, 0]) {
+      translate([x1 / 2, 0, h1 / 2])
+        cube([x1 + incr_xy * 2, y1 + incr_xy * 2, h1 + incr_z * 2], center = true);
+      translate([x1 + x2 / 2, 0, h2 / 2])
+        cube([x2 + incr_xy * 2, y2 + incr_xy * 2, h2 + incr_z * 2], center = true);
+    }
+}
+
 module button_ear_hole() {
   union() {
     // outer side
@@ -225,10 +100,12 @@ module button_hole() {
           projection(cut = false)
             button_ear_hole();
     switch_hole();
+    button_support(0.1, 0.3);
   }
 }
 
 module treg_btn() {
+  d = btn_ear_roffset * 0.8;
   difference() {
     union() {
       hull() {
@@ -246,12 +123,13 @@ module treg_btn() {
       translate([btn_offset_x, 0, 0])
         mirror([1, 0, 0]) {
           hull() {
-            d = btn_ear_roffset * 0.8;
             button_section(0.1, 0);
             translate([d, 0, 0])
               button_section(btn_ear_thick - d, btn_ear_roffset);
           }
         }
+      translate([d - 0.2, 0, 0])
+        button_support();
     }
     translate([0, 0, -200 - center[2] - base_h])
       cube(400, center = true);
@@ -312,8 +190,10 @@ module treg_top() {
 
 intersection() {
   treg_top();
-// translate([0, 0, -200 - 20])
-//   cube(400, center = true);
+  // translate([0, 0, -200 - 20])
+  //   cube(400, center = true);
+  translate([0, -200 + 60, 0])
+    cube(400, center = true);
 }
 // treg_btn();
 // mirror([1, 0, 0])
