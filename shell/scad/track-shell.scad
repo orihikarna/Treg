@@ -138,7 +138,8 @@ module support_ball_holes() {
       rotate([-50, 0, 0])
         translate([0, 0, -hole_r]) {
           cylinder(h = 2.5, d = 2.5, center = true, $fn = 64);
-          translate([0, 0, -20])
-            cylinder(h = 40, d = 1.8, center = true, $fn = 64);
+          rotate([(i == 2) ? 50 : 0, 0, 0])
+            translate([0, 0, -20])
+              cylinder(h = 40, d = 1.8, center = true, $fn = 64);
         }
 }
