@@ -57,20 +57,45 @@ module button_section(extrude_h = 10, offset_r = 0) {
               egg_2d(0, 45);
 }
 
+spt_w = 3;
+spt_dy = 15;
+
+module button_support_hole() {
+  x1 = spt_w - 0.4;
+  x2 = spt_w * 2 - x1;
+  y = spt_w + 0.4;
+  h1 = spt_w + 1;
+  h2 = spt_w * 2 + 2;
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
+    for(sgn_y = [-1, +1])
+      translate([0, spt_dy * sgn_y, 0])
+        mirror([1, 0, 0]) {
+          translate([x1 / 2, 0, -_clr]) {
+            linear_extrude(h1 + _clr)
+              square([x1 + _clr, y], center = true);
+            translate([0, 0, h1])
+              linear_extrude(y / 2, scale = [1, 0])
+                square([x1 + _clr, y], center = true);
+          }
+          translate([x1 + x2 / 2, 0, -_clr]) {
+            linear_extrude(h2 + _clr)
+              square([x2 + _clr, y], center = true);
+            translate([0, 0, h2])
+              linear_extrude(y / 2, scale = [1, 0])
+                square([x2 + _clr, y], center = true);
+          }
+        }
+}
+
 module button_support(incr_xy = 0, incr_z = 0) {
-  x1 = 10;
-  y1 = 4;
-  h1 = 1;
-  x2 = 3;
-  y2 = 7;
-  h2 = 2;
-  translate([btn_offset_x, btn_offset_y, -center[2] - base_h])
-    mirror([1, 0, 0]) {
-      translate([x1 / 2, 0, h1 / 2])
-        cube([x1 + incr_xy * 2, y1 + incr_xy * 2, h1 + incr_z * 2], center = true);
-      translate([x1 + x2 / 2, 0, h2 / 2])
-        cube([x2 + incr_xy * 2, y2 + incr_xy * 2, h2 + incr_z * 2], center = true);
-    }
+  for(sgn_y = [-1, +1])
+    translate([btn_offset_x, btn_offset_y + spt_dy * sgn_y, -center[2] - base_h])
+      mirror([1, 0, 0]) {
+        translate([spt_w / 2, 0, spt_w / 2])
+          cube([spt_w * 2 + incr_xy * 2, spt_w + incr_xy * 2, spt_w + incr_z * 2], center = true);
+        translate([spt_w + spt_w, 0, spt_w])
+          cube([2 * spt_w + incr_xy * 2, spt_w + incr_xy * 2, spt_w + incr_z * 2], center = true);
+      }
 }
 
 module button_ear_hole() {
@@ -93,14 +118,14 @@ module button_ear_hole() {
 
 module button_hole() {
   union() {
+    switch_hole();
     button_ear_hole();
+    button_support_hole();
     if (false)
       translate([0, 0, -center[2] - base_h - _clr])
         linear_extrude(base_h + _clr)
           projection(cut = false)
             button_ear_hole();
-    switch_hole();
-    button_support(0.1, 0.3);
   }
 }
 
@@ -177,9 +202,9 @@ module pcba_screw_support() {
 module treg_top() {
   difference() {
     shell();
+    support_ball_holes();
     translate([0, 0, -200 - center[2] - base_h])
       cube(400, center = true);
-    support_ball_holes();
     button_hole();
     mirror([1, 0, 0])
       button_hole();
