@@ -189,9 +189,9 @@ pcba_screw_pos = 3;
 pcba_sensor_pos = 12;
 
 module pcba_hole() {
-  translate([0, pcba_size[1] / 2 - pcba_sensor_pos, -center[2]])
+  translate([0, pcba_size[1] / 2 - pcba_sensor_pos, -center[2] - 0.6])
     mirror([0, 0, 1]) {
-      linear_extrude(base_h + 0.1 + _clr)
+      linear_extrude(base_h + _clr)
         square(pcba_size, center = true);
     }
   translate([0, 0, -center[2]])
