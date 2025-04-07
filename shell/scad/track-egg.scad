@@ -97,12 +97,12 @@ module button_support() {
     for(sgn_y = [-1, +1])
       translate([0, spt_dy * sgn_y, 0])
         mirror([1, 0, 0]) {
-          translate([x1 / 2, 0, -_clr]) {
+          translate([(1.0 + x1 + x2 / 2) / 2 - 0.5, 0, -_clr]) {
             linear_extrude(h1 + _clr)
-              square([x1 + _clr, y], center = true);
+              square([1.0 + x1 + x2 / 2 + _clr, y], center = true);
           }
           translate([x1 + x2 / 2, 0, -_clr]) {
-            linear_extrude(h2 + _clr)
+            linear_extrude(h2 + _clr, scale = [0.7, 1])
               square([x2 + _clr, y], center = true);
           }
         }
@@ -153,7 +153,6 @@ module button_hole() {
 }
 
 module treg_btn() {
-  d = btn_ear_roffset * 0.8;
   difference() {
     union() {
       hull() {
@@ -168,6 +167,7 @@ module treg_btn() {
             }
         }
       }
+      d = btn_ear_roffset * 0.8;
       translate([btn_offset_x, 0, 0])
         mirror([1, 0, 0]) {
           hull() {
@@ -176,7 +176,7 @@ module treg_btn() {
               button_section(btn_ear_thick - d, btn_ear_roffset);
           }
         }
-      translate([d - 0.2, 0, 0])
+      translate([btn_ear_hole_thick - btn_ear_thick - 0.1, 0, 0])
         button_support();
     }
     translate([0, 0, -200 - center[2] - base_h])
@@ -240,13 +240,13 @@ module treg_top() {
   pcba_screw_support();
 }
 
-// if (false)
-intersection() {
-  treg_top();
-// translate([0, 0, -200 - 20])
-//   cube(400, center = true);
-}
-// treg_btn();
+if (false)
+  intersection() {
+    treg_top();
+  // translate([0, 0, -200 - 20])
+  //   cube(400, center = true);
+  }
+treg_btn();
 // mirror([1, 0, 0])
 //   translate([13, 0, 0])
 //     treg_btn();
