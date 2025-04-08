@@ -246,7 +246,14 @@ if (false)
   // translate([0, 0, -200 - 20])
   //   cube(400, center = true);
   }
-treg_btn();
+// if(false)
+intersection() {
+  // rotate([0, 2, 0])
+  translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h - 0.4])
+    treg_btn();
+  linear_extrude(50)
+    square(60);
+}
 // mirror([1, 0, 0])
 //   translate([13, 0, 0])
 //     treg_btn();
