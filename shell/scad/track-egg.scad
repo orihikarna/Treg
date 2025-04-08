@@ -90,7 +90,7 @@ module button_support_hole() {
 module button_support() {
   x1 = spt_w;
   x2 = spt_w * 2 - x1;
-  y = spt_w + 0.4;
+  y = spt_w;
   h1 = spt_w;
   h2 = spt_w * 2;
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
@@ -176,7 +176,7 @@ module treg_btn() {
               button_section(btn_ear_thick - d, btn_ear_roffset);
           }
         }
-      translate([btn_ear_hole_thick - btn_ear_thick - 0.1, 0, 0])
+      translate([btn_ear_hole_thick - btn_ear_thick + 0.2, 0, 0])
         button_support();
     }
     translate([0, 0, -200 - center[2] - base_h])
