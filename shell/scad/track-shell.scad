@@ -137,7 +137,7 @@ module shell() {
 
 module support_ball_holes() {
   azim = [-130, 0, +130];
-  elev = [-58, -52, -58];
+  elev = [-60, -50, -60];
   for(i = [0:2])
     rotate([0, 0, azim[i]])
       rotate([elev[i], 0, 0])
