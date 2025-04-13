@@ -126,10 +126,13 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  // shell_base();
+  if (false) {
+    shell_base();
   // shell_3d_minkowski();
   // shell_2d_offset();
-  shell_vtk("../../surface-mkw=1.6.stl");
+  } else {
+    shell_vtk("../../surface-mkw=1.6.stl");
+  }
 }
 
 module support_ball_holes() {
@@ -140,7 +143,7 @@ module support_ball_holes() {
       rotate([elev[i], 0, 0])
         translate([0, 0, -hole_r]) {
           cylinder(h = 2.6, d = 2.6, center = true, $fn = 64);
-            translate([0, 0, -20])
+          translate([0, 0, -20])
             cylinder(h = 40, d = 1.4, center = true, $fn = 64);
         }
 }

@@ -243,22 +243,21 @@ module treg_top() {
   pcba_screw_support();
 }
 
-if (false)
+if (true) {
   intersection() {
     treg_top();
   // translate([0, 0, -200 - 20])
   //   cube(400, center = true);
   }
-intersection() {
-  rotate([0, 2, 0])
-    translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h])
-      treg_btn();
-  translate([0, 0, 200])
-    cube(400, center = true);
+} else {
+  intersection() {
+    rotate([0, 2, 0])
+      translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h])
+        treg_btn();
+    translate([0, 0, 200])
+      cube(400, center = true);
+  }
 }
-// mirror([1, 0, 0])
-//   translate([13, 0, 0])
-//     treg_btn();
 
 // ball
 if (false)
