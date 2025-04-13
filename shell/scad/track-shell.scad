@@ -133,13 +133,14 @@ module shell() {
 }
 
 module support_ball_holes() {
+  azim = [-130, 0, +130];
+  elev = [-58, -52, -58];
   for(i = [0:2])
-    rotate([0, 0, 120 * i - 60])
-      rotate([-50, 0, 0])
+    rotate([0, 0, azim[i]])
+      rotate([elev[i], 0, 0])
         translate([0, 0, -hole_r]) {
-          cylinder(h = 2.5, d = 2.5, center = true, $fn = 64);
-          rotate([(i == 2) ? 50 : 0, 0, 0])
+          cylinder(h = 2.6, d = 2.6, center = true, $fn = 64);
             translate([0, 0, -20])
-              cylinder(h = 40, d = 1.8, center = true, $fn = 64);
+            cylinder(h = 40, d = 1.4, center = true, $fn = 64);
         }
 }
