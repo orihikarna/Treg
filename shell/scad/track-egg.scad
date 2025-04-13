@@ -74,14 +74,14 @@ module button_support_hole() {
             linear_extrude(h1 + _clr)
               square([x1 + _clr, y], center = true);
             translate([0, 0, h1])
-              linear_extrude(y / 2, scale = [1, 0])
+              linear_extrude(y * 0.4, scale = [1, 0])
                 square([x1 + _clr, y], center = true);
           }
           translate([x1 + x2 / 2, 0, -_clr]) {
             linear_extrude(h2 + _clr)
               square([x2 + _clr, y], center = true);
             translate([0, 0, h2])
-              linear_extrude(y / 2, scale = [1, 0])
+              linear_extrude(y * 0.4, scale = [1, 0])
                 square([x2 + _clr, y], center = true);
           }
         }
@@ -191,8 +191,11 @@ pcba_sensor_pos = 12;
 module pcba_hole() {
   translate([0, pcba_size[1] / 2 - pcba_sensor_pos, -center[2] - 0.6])
     mirror([0, 0, 1]) {
-      linear_extrude(base_h + _clr)
+      linear_extrude(base_h + _clr) {
         square(pcba_size, center = true);
+        translate([0, 12.4, 0])
+          square([100, 3], center = true);
+      }
     }
   translate([0, 0, -center[2]])
     cylinder(d = 8, h = 2, center = true, $fn = 90);
@@ -252,7 +255,6 @@ intersection() {
       treg_btn();
   translate([0, 0, 200])
     cube(400, center = true);
-
 }
 // mirror([1, 0, 0])
 //   translate([13, 0, 0])
