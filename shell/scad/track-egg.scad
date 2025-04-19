@@ -152,7 +152,7 @@ module button_hole() {
   }
 }
 
-module treg_btn() {
+module treg_btn_base() {
   difference() {
     union() {
       hull() {
@@ -176,11 +176,46 @@ module treg_btn() {
               button_section(btn_ear_thick - d, btn_ear_roffset);
           }
         }
-      translate([btn_ear_hole_thick - btn_ear_thick + 0.2, 0, 0])
-        button_support();
     }
     translate([0, 0, -200 - center[2] - base_h])
       cube(400, center = true);
+  }
+}
+
+module treg_btn() {
+  hinge_offset_x = -0.2;
+  hinge_offset_y = 0.25;
+  hinge_offset_z = 2.4;
+  hinge_outer_r = 2.5;
+  hinge_size_y = 43.5;
+  difference() {
+    union() {
+      treg_btn_base();
+      translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
+        // button_support();
+        difference() {
+          translate([0, hinge_offset_y, 0])
+            union() {
+              rotate([90, 0, 0])
+                cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
+              // translate([0, 0, -5])
+              // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
+              translate([-0, 0, -hinge_outer_r * 0.5])
+                mirror([0, 0, 1])
+                  linear_extrude(hinge_outer_r * tan(60), scale = [0, 1])
+                    square([hinge_outer_r * 2 * cos(30), hinge_size_y], center = true);
+            }
+          cube([10, 30, 10], center = true);
+          translate([25 - hinge_offset_x + _clr, 0, 0])
+            cube(50, center = true);
+        }
+      }
+    }
+    translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z])
+      // button_support();
+      rotate([0, 30, 0])
+        rotate([90, 0, 0])
+          cylinder(d = 2, h = 48, center = true, $fn = 6);
   }
 }
 
@@ -243,7 +278,7 @@ module treg_top() {
   pcba_screw_support();
 }
 
-if (true) {
+if (false) {
   intersection() {
     treg_top();
   // translate([0, 0, -200 - 20])
@@ -251,9 +286,9 @@ if (true) {
   }
 } else {
   intersection() {
-    rotate([0, 2, 0])
-      translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h])
-        treg_btn();
+    // rotate([0, 2, 0])
+    translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h])
+      treg_btn();
     translate([0, 0, 200])
       cube(400, center = true);
   }

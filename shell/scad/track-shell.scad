@@ -8,7 +8,7 @@ include <egg.scad>
 _clr = 0.01;
 
 
-module shell_base() {
+module shell_base(resolution = 4) {
   difference() {
     rotate([egg_tilt, 0, 0])
       translate(-center)
@@ -16,7 +16,7 @@ module shell_base() {
           rotate([-90, 0, 0])
             scale(egg_scale)
               // import("egg-42-4.stl");
-              egg(egg_btm_alpha, egg_top_alpha, 4);
+              egg(egg_btm_alpha, egg_top_alpha, resolution);
     scale(hole_r)
       import("icosphere-4.stl");
   }
@@ -126,8 +126,8 @@ module shell_vtk(path) {
 }
 
 module shell() {
-  if (false) {
-    shell_base();
+  if (true) {
+    shell_base(3);
   // shell_3d_minkowski();
   // shell_2d_offset();
   } else {
