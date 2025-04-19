@@ -211,11 +211,14 @@ module treg_btn() {
         }
       }
     }
-    translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z])
+    translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
       // button_support();
       rotate([0, 30, 0])
         rotate([90, 0, 0])
-          cylinder(d = 2, h = 48, center = true, $fn = 6);
+          cylinder(d = 2.2, h = 48, center = true, $fn = 6);
+      translate([0, 0, -5])
+        cube([2.2 * cos(30), 30, 10], center = true);
+    }
   }
 }
 
