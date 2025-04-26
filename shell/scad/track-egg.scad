@@ -1,24 +1,14 @@
 include <track-shell.scad>
 
-
-btn_offset_x = 31;
-btn_offset_y = 24;
-btn_ear_hole_gap = 0.3;
-btn_ear_thick = 1.6;
-btn_ear_hole_thick = 2.6;
-btn_ear_roffset = 1.6;
-btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
-
-switch_d1 = 8.0;
-switch_d2 = 3.0;
+// switch 6 (body) + 3.4 (pins)
+// pcb = 1.6
 switch_w = 8.8;
+switch_d1 = 8.0;// 6 + 1.6 = 7.6
+switch_d2 = 3.0;// 3.4 - 1.6 = 1.8 -> 2.4
 switch_h1 = 30.6;
 switch_h2 = 18;
 
 module switch_hole_section() {
-  // switch 6 (body) + 3.4 (pins)
-  // pcb = 1.6
-  // --> 7.6 + 2.4
   mirror([1, 0, 0])
     union() {
       translate([switch_d1 / 2 - _clr, 0, 0])
@@ -47,6 +37,15 @@ module switch_hole() {
   }
 }
 
+btn_offset_x = 31;
+btn_offset_y = 24;
+btn_ear_hole_gap = 0.3;
+btn_ear_thick = 1.6;
+btn_ear_btm_thick = 1.2;
+btn_ear_hole_thick = 2.6;
+btn_ear_roffset = 1.6;
+btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
+
 module button_section(extrude_h = 10, offset_r = 0) {
   translate([0, btn_offset_y, -2 - center[2]])
     rotate([60, 0, 0])
@@ -57,81 +56,27 @@ module button_section(extrude_h = 10, offset_r = 0) {
               egg_2d(0, 45);
 }
 
-spt_w = 3;
-spt_dy = 15;
-
-module button_support_hole() {
-  x1 = spt_w - 0.4;
-  x2 = spt_w * 2 - x1;
-  y = spt_w + 0.8;
-  h1 = spt_w + 1;
-  h2 = spt_w * 2 + 2;
-  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
-    for(sgn_y = [-1, +1])
-      translate([0, spt_dy * sgn_y, 0])
-        mirror([1, 0, 0]) {
-          translate([x1 / 2, 0, -_clr]) {
-            linear_extrude(h1 + _clr)
-              square([x1 + _clr, y], center = true);
-            translate([0, 0, h1])
-              linear_extrude(y * 0.4, scale = [1, 0])
-                square([x1 + _clr, y], center = true);
-          }
-          translate([x1 + x2 / 2, 0, -_clr]) {
-            linear_extrude(h2 + _clr)
-              square([x2 + _clr, y], center = true);
-            translate([0, 0, h2])
-              linear_extrude(y * 0.4, scale = [1, 0])
-                square([x2 + _clr, y], center = true);
-          }
-        }
-}
-
-module button_support() {
-  x1 = spt_w;
-  x2 = spt_w * 2 - x1;
-  y = spt_w;
-  h1 = spt_w;
-  h2 = spt_w * 2;
-  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
-    for(sgn_y = [-1, +1])
-      translate([0, spt_dy * sgn_y, 0])
-        mirror([1, 0, 0]) {
-          translate([(1.0 + x1 + x2 / 2) / 2 - 0.5, 0, -_clr]) {
-            linear_extrude(h1 + _clr)
-              square([1.0 + x1 + x2 / 2 + _clr, y], center = true);
-          }
-          translate([x1 + x2 / 2, 0, -_clr]) {
-            linear_extrude(h2 + _clr, scale = [0.7, 1])
-              square([x2 + _clr, y], center = true);
-          }
-        }
-}
-
-module button_ear_hole() {
-  union() {
-    // outer side
-    translate([btn_offset_x - _clr, 0, 0])
-      button_section(16, btn_ear_hole_gap);
-    // innder side
-    translate([btn_offset_x, 0, 0]) {
-      mirror([1, 0, 0])
-        hull() {
-          d = btn_ear_roffset * 0.8;// same as in treg_btn()
-          button_section(0.1, btn_ear_hole_gap);
-          translate([d, 0, 0])
-            button_section(btn_ear_hole_thick - d, btn_ear_hole_roffset);
+module button_shape() {
+  hull()
+    for(th = [0:10:90]) {
+      btn_r = 1.6;
+      dx = btn_r * sin(th);
+      offset_r = btn_r * (cos(th) - 1);
+      translate([dx, 0, 0])
+        intersection() {
+          shell();
+          translate([btn_offset_x - dx, 0, 0])
+            button_section(16, offset_r);
         }
     }
-  }
 }
 
 module button_hole() {
   union() {
-    switch_hole();
     button_ear_hole();
-    button_support_hole();
-    if (true)
+    // button_hook_support_hole();
+    button_hinge_support_hole();
+    if (true)// button hole extruded downto bottom plate
       translate([0, 0, -center[2] - base_h - _clr])
         union() {
           linear_extrude(base_h - 2 + _clr)
@@ -152,73 +97,153 @@ module button_hole() {
   }
 }
 
-module treg_btn_base() {
-  difference() {
-    union() {
+module button_ear() {
+  translate([btn_offset_x, 0, 0])
+    mirror([1, 0, 0])
       hull() {
-        btn_r = 1.6;
-        for(th = [0:10:90]) {
-          dx = btn_r * sin(th);
-          translate([dx, 0, 0])
-            intersection() {
-              shell();
-              translate([btn_offset_x - dx, 0, 0])
-                button_section(16, btn_r * (cos(th) - 1));
-            }
-        }
+        button_section(0.1, 0);
+        translate([btn_ear_btm_thick, 0, 0])
+          button_section(btn_ear_thick - btn_ear_btm_thick, btn_ear_roffset);
       }
-      d = btn_ear_roffset * 0.8;
-      translate([btn_offset_x, 0, 0])
-        mirror([1, 0, 0]) {
-          hull() {
-            button_section(0.1, 0);
-            translate([d, 0, 0])
-              button_section(btn_ear_thick - d, btn_ear_roffset);
-          }
+}
+
+module button_ear_hole() {
+  union() {
+    // outer side
+    translate([btn_offset_x - _clr, 0, 0])
+      button_section(16, btn_ear_hole_gap);
+    // inner side
+    translate([btn_offset_x, 0, 0])
+      mirror([1, 0, 0])
+        hull() {
+          button_section(0.1, btn_ear_hole_gap);
+          translate([btn_ear_btm_thick, 0, 0])
+            button_section(btn_ear_hole_thick - btn_ear_btm_thick, btn_ear_hole_roffset);
         }
-    }
-    translate([0, 0, -200 - center[2] - base_h])
-      cube(400, center = true);
   }
 }
 
-module treg_btn() {
-  hinge_offset_x = -0.2;
-  hinge_offset_y = 0.25;
-  hinge_offset_z = 2.4;
-  hinge_outer_r = 2.5;
-  hinge_size_y = 43.5;
+hook_w = 3;
+hook_dy = 15;
+
+module button_hook_support_hole() {
+  x1 = hook_w - 0.4;
+  x2 = hook_w * 2 - x1;
+  y = hook_w + 0.8;
+  h1 = hook_w + 1;
+  h2 = hook_w * 2 + 2;
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
+    for(sgn_y = [-1, +1])
+      translate([0, hook_dy * sgn_y, 0])
+        mirror([1, 0, 0]) {
+          translate([x1 / 2, 0, -_clr]) {
+            linear_extrude(h1 + _clr)
+              square([x1 + _clr, y], center = true);
+            translate([0, 0, h1])
+              linear_extrude(y * 0.4, scale = [1, 0])
+                square([x1 + _clr, y], center = true);
+          }
+          translate([x1 + x2 / 2, 0, -_clr]) {
+            linear_extrude(h2 + _clr)
+              square([x2 + _clr, y], center = true);
+            translate([0, 0, h2])
+              linear_extrude(y * 0.4, scale = [1, 0])
+                square([x2 + _clr, y], center = true);
+          }
+        }
+}
+
+module button_hook_support() {
+  x1 = hook_w;
+  x2 = hook_w * 2 - x1;
+  y = hook_w;
+  h1 = hook_w;
+  h2 = hook_w * 2;
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h])
+    for(sgn_y = [-1, +1])
+      translate([0, hook_dy * sgn_y, 0])
+        mirror([1, 0, 0]) {
+          translate([(1.0 + x1 + x2 / 2) / 2 - 0.5, 0, -_clr]) {
+            linear_extrude(h1 + _clr)
+              square([1.0 + x1 + x2 / 2 + _clr, y], center = true);
+          }
+          translate([x1 + x2 / 2, 0, -_clr]) {
+            linear_extrude(h2 + _clr, scale = [0.7, 1])
+              square([x2 + _clr, y], center = true);
+          }
+        }
+}
+
+hinge_offset_x = -0.2;
+hinge_offset_y = 0.25;
+hinge_offset_z = 2.4;
+hinge_outer_r = 2.5;
+hinge_size_y = 43.5;
+
+module button_hinge_support() {
+  translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z])
+    difference() {
+      translate([0, hinge_offset_y, 0])
+        union() {
+          rotate([90, 0, 0])
+            cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
+          // translate([0, 0, -5])
+          // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
+          translate([0, 0, -hinge_outer_r * 0.5])
+            mirror([0, 0, 1])
+              linear_extrude(hinge_outer_r * tan(60), scale = [0, 1])
+                square([hinge_outer_r * 2 * cos(30), hinge_size_y], center = true);
+        }
+      cube([10, 30, 10], center = true);
+      translate([25 - hinge_offset_x + _clr, 0, 0])
+        cube(50, center = true);
+    }
+}
+
+module button_hinge_support_hole() {
+  translate([btn_offset_x - btn_ear_hole_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h])
+    difference() {
+      translate([0, hinge_offset_y, hinge_outer_r])
+        union() {
+          rotate([90, 0, 0])
+            cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
+          // translate([0, 0, -5])
+          // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
+          mirror([0, 0, 1])
+            linear_extrude(hinge_outer_r * 2, scale = [1, 1])
+              square([hinge_outer_r * 2, hinge_size_y], center = true);
+          rotate([0, 30, 0])
+            rotate([90, 0, 0])
+              cylinder(d = 2.2, h = 48, center = true, $fn = 6);
+        }
+    // cube([10, 30, 10], center = true);
+    // translate([25 - hinge_offset_x + _clr, 0, 0])
+    // cube(50, center = true);
+    }
+}
+
+module button_hinge_support_hole_button() {
+  translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
+    // button_hook_support();
+    rotate([0, 30, 0])
+      rotate([90, 0, 0])
+        cylinder(d = 2.2, h = 48, center = true, $fn = 6);
+    translate([0, 0, -5])
+      cube([2.2 * cos(30), 30, 10], center = true);
+  }
+}
+
+module treg_button() {
   difference() {
     union() {
-      treg_btn_base();
-      translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
-        // button_support();
-        difference() {
-          translate([0, hinge_offset_y, 0])
-            union() {
-              rotate([90, 0, 0])
-                cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
-              // translate([0, 0, -5])
-              // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
-              translate([-0, 0, -hinge_outer_r * 0.5])
-                mirror([0, 0, 1])
-                  linear_extrude(hinge_outer_r * tan(60), scale = [0, 1])
-                    square([hinge_outer_r * 2 * cos(30), hinge_size_y], center = true);
-            }
-          cube([10, 30, 10], center = true);
-          translate([25 - hinge_offset_x + _clr, 0, 0])
-            cube(50, center = true);
-        }
-      }
+      button_shape();
+      button_ear();
+      // button_hook_support();
+      button_hinge_support();
     }
-    translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
-      // button_support();
-      rotate([0, 30, 0])
-        rotate([90, 0, 0])
-          cylinder(d = 2.2, h = 48, center = true, $fn = 6);
-      translate([0, 0, -5])
-        cube([2.2 * cos(30), 30, 10], center = true);
-    }
+    button_hinge_support_hole_button();
+    translate([0, 0, -200 - center[2] - base_h])
+      cube(400, center = true);
   }
 }
 
@@ -265,41 +290,41 @@ module pcba_screw_support() {
 
 module treg_top() {
   difference() {
-    intersection() {
-      shell();
-      translate([0, -200 + 60, 0])
-        cube(400, center = true);
-    }
+    shell();
     support_ball_holes();
-    translate([0, 0, -200 - center[2] - base_h])
-      cube(400, center = true);
     button_hole();
-    mirror([1, 0, 0])
+    switch_hole();
+    mirror([1, 0, 0]) {
       button_hole();
+      switch_hole();
+    }
     pcba_hole();
+    translate([0, 0, -200 - center[2] - base_h])
+      cube(400, center = true);// cut bottom plate
   }
   pcba_screw_support();
 }
 
-if (false) {
+if (true) {
   intersection() {
     treg_top();
-  // translate([0, 0, -200 - 20])
-  //   cube(400, center = true);
+    // translate([0, 0, -200 - 20])
+    //   cube(400, center = true);
+    translate([0, -200 + 60, 0])
+      cube(400, center = true);// extract ball & button part
+    translate([btn_offset_x, btn_offset_y, -center[2] - base_h + 22])
+      cube([30, 70, 44], center = true);// extract button area
   }
-} else {
+}
+if (true) {
   intersection() {
     // rotate([0, 2, 0])
-    translate([-btn_offset_x + btn_ear_thick + spt_w * 2, 0, center[2] + base_h])
-      treg_btn();
-    translate([0, 0, 200])
+    translate([btn_ear_thick - btn_ear_hole_thick, 0, 0])
+      treg_button();
+    translate([0, 0, -center[2] - base_h + 200 - 0.1])
       cube(400, center = true);
   }
 }
-
-// ball
-if (false)
-  color("white")
-    translate(center)
-      scale(ball_r)
-        import("icosphere-4.stl");
+if (true)
+  color("blue", 0.5)
+    button_hinge_support_hole();
