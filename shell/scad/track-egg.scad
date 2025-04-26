@@ -19,16 +19,12 @@ module switch_hole_section() {
 }
 
 module switch_hole() {
-  // translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y + 2, -center[2] - _clr]) {
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y + 5, 2 - center[2] - _clr]) {
     rotate([45, 0, 0])
       union() {
         translate([0, 0, -base_h * 0])
           linear_extrude(switch_w + _clr + base_h * 0)
             switch_hole_section();
-        // translate([0, 0, switch_w])
-        //   linear_extrude(12, scale = 0.1)
-        //     switch_hole_section();
         for(sgn = [-1, +1])
           translate([-switch_d1, sgn * 12, switch_w / 2])
             rotate([0, +90, 0])
@@ -179,58 +175,69 @@ hinge_offset_y = 0.25;
 hinge_offset_z = 2.4;
 hinge_outer_r = 2.5;
 hinge_size_y = 43.5;
+hinge_size_y_inner = 30;
 
 module button_hinge_support() {
+  angle = 10;
   translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z])
     difference() {
       translate([0, hinge_offset_y, 0])
         union() {
           rotate([90, 0, 0])
             cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
-          // translate([0, 0, -5])
-          // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
-          translate([0, 0, -hinge_outer_r * 0.5])
+          translate([0, 0, -hinge_outer_r * sin(angle)])
             mirror([0, 0, 1])
-              linear_extrude(hinge_outer_r * tan(60), scale = [0, 1])
-                square([hinge_outer_r * 2 * cos(30), hinge_size_y], center = true);
+              linear_extrude(hinge_outer_r * cos(angle) * tan(90 - angle), scale = [0, 1])
+                square([hinge_outer_r * 2 * cos(angle), hinge_size_y], center = true);
         }
-      cube([10, 30, 10], center = true);
+      cube([10, hinge_size_y_inner, 10], center = true);
       translate([25 - hinge_offset_x + _clr, 0, 0])
         cube(50, center = true);
     }
 }
 
-module button_hinge_support_hole() {
-  translate([btn_offset_x - btn_ear_hole_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h])
-    difference() {
-      translate([0, hinge_offset_y, hinge_outer_r])
-        union() {
-          rotate([90, 0, 0])
-            cylinder(r = hinge_outer_r, h = hinge_size_y, center = true, $fn = 60);
-          // translate([0, 0, -5])
-          // cube([hinge_outer_r * 2, hinge_size_y, 10], center = true);
-          mirror([0, 0, 1])
-            linear_extrude(hinge_outer_r * 2, scale = [1, 1])
-              square([hinge_outer_r * 2, hinge_size_y], center = true);
-          rotate([0, 30, 0])
-            rotate([90, 0, 0])
-              cylinder(d = 2.2, h = 48, center = true, $fn = 6);
-        }
-    // cube([10, 30, 10], center = true);
-    // translate([25 - hinge_offset_x + _clr, 0, 0])
-    // cube(50, center = true);
-    }
-}
+d_pin_hole = 2.00;
 
 module button_hinge_support_hole_button() {
   translate([btn_offset_x - btn_ear_thick + hinge_offset_x, btn_offset_y, -center[2] - base_h + hinge_offset_z]) {
-    // button_hook_support();
     rotate([0, 30, 0])
       rotate([90, 0, 0])
-        cylinder(d = 2.2, h = 48, center = true, $fn = 6);
+        cylinder(d = d_pin_hole / cos(30), h = 48, center = true, $fn = 6);
     translate([0, 0, -5])
       cube([2.2 * cos(30), 30, 10], center = true);
   }
+}
+
+module button_hinge_support_hole() {
+  gap = 0.5;
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h + hinge_offset_z])
+    difference() {
+      translate([0, hinge_offset_y, 0])
+        union() {
+          rotate([90, 0, 0])
+            cylinder(r = hinge_outer_r + gap, h = hinge_size_y + gap * 2, center = true, $fn = 60);
+          translate([0, 0, (hinge_outer_r + gap) * sin(50)])
+            linear_extrude((hinge_outer_r + gap) * cos(50) * tan(40), scale = [0, 1])
+              square([(hinge_outer_r + gap) * 2 * cos(50), hinge_size_y + gap * 2], center = true);
+          mirror([0, 0, 1])
+            linear_extrude(hinge_outer_r * 1.2)
+              square([(hinge_outer_r + gap) * 2, hinge_size_y + gap * 2], center = true);
+          translate([0, 1.5, 0])
+            rotate([0, 30, 0])
+              rotate([90, 0, 0])
+                cylinder(d = 1.85 * 2 / sqrt(3), h = 60, center = true, $fn = 6);
+        }
+      difference() {
+        cube([10, hinge_size_y_inner - gap * 2, 10], center = true);
+        rotate([0, 30, 0])
+          rotate([90, 0, 0])
+            cylinder(d = d_pin_hole, h = 48, center = true, $fn = 6);
+        translate([0, 0, -5])
+          cube([d_pin_hole * cos(30), hinge_size_y_inner - gap * 2, 10], center = true);
+      }
+      translate([5 + d_pin_hole / 2 * cos(30), 0, 0])
+        cube([10, 50, 10], center = true);
+    }
 }
 
 module treg_button() {
@@ -254,10 +261,16 @@ pcba_sensor_pos = 12;
 module pcba_hole() {
   translate([0, pcba_size[1] / 2 - pcba_sensor_pos, -center[2] - 0.6])
     mirror([0, 0, 1]) {
-      linear_extrude(base_h + _clr) {
-        square(pcba_size, center = true);
-        translate([0, 12.4, 0])
+      linear_extrude(base_h + _clr)
+        square(pcba_size, center = true);// pcba plate
+      translate([0, 12.4, 3]) {// switch wire
+        linear_extrude(base_h)
           square([100, 3], center = true);
+        translate([0, 0, _clr])
+          mirror([0, 0, 1])
+            linear_extrude(3.0 / 2, scale = [1, 0]) {
+              square([100, 3], center = true);
+            }
       }
     }
   translate([0, 0, -center[2]])
@@ -292,11 +305,11 @@ module treg_top() {
   difference() {
     shell();
     support_ball_holes();
-    button_hole();
     switch_hole();
+    button_hole();
     mirror([1, 0, 0]) {
-      button_hole();
       switch_hole();
+      button_hole();
     }
     pcba_hole();
     translate([0, 0, -200 - center[2] - base_h])
@@ -316,15 +329,15 @@ if (true) {
       cube([30, 70, 44], center = true);// extract button area
   }
 }
-if (true) {
+if (false) {
   intersection() {
     // rotate([0, 2, 0])
     translate([btn_ear_thick - btn_ear_hole_thick, 0, 0])
       treg_button();
-    translate([0, 0, -center[2] - base_h + 200 - 0.1])
+    translate([0, 0, -center[2] - base_h + 0.2 + 200])
       cube(400, center = true);
   }
 }
-if (true)
-  color("blue", 0.5)
+if (false)
+  color("blue", 0.8)
     button_hinge_support_hole();
