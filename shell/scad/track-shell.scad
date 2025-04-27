@@ -5,9 +5,6 @@ include <params.scad>
 // include <icosphere.scad>
 include <egg.scad>
 
-_clr = 0.01;
-
-
 module shell_base(resolution = 4) {
   difference() {
     rotate([egg_tilt, 0, 0])
@@ -143,7 +140,9 @@ module support_ball_holes() {
       rotate([elev[i], 0, 0])
         translate([0, 0, -hole_r]) {
           cylinder(h = 2.6, d = 2.6, center = true, $fn = 64);
-          translate([0, 0, -20])
-            cylinder(h = 40, d = 1.4, center = true, $fn = 64);
+          //   translate([0, 0, -20])
+          //     cylinder(h = 40, d = 1.4, center = true, $fn = 64);
+          rotate([0, 90, 0])
+            cylinder(h = 0.6, d = 3.8, center = true, $fn = 64);
         }
 }
