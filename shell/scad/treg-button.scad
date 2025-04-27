@@ -199,7 +199,7 @@ module button_hinge_support_hole() {
           cube([10, 50, 10], center = true);
       }
       translate([0, hinge_offset_y + pin_offset_y, -4])
-        cube([0.8, 57, 8], center = true);
+        cube([0.8, 55, 8], center = true);
     }
 }
 
