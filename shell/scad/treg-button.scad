@@ -168,33 +168,38 @@ module button_hinge_support_hole_button() {
 
 module button_hinge_support_hole() {
   gap = 0.5;
+  pin_offset_y = 1.5;
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h + hinge_offset_z])
-    difference() {
-      translate([0, hinge_offset_y, 0])
-        union() {
-          rotate([90, 0, 0])
-            cylinder(r = hinge_outer_r + gap, h = hinge_size_y + gap * 2, center = true, $fn = 60);
-          translate([0, 0, (hinge_outer_r + gap) * sin(50)])
-            linear_extrude((hinge_outer_r + gap) * cos(50) * tan(40), scale = [0, 1])
-              square([(hinge_outer_r + gap) * 2 * cos(50), hinge_size_y + gap * 2], center = true);
-          mirror([0, 0, 1])
-            linear_extrude(hinge_outer_r * 1.2)
-              square([(hinge_outer_r + gap) * 2, hinge_size_y + gap * 2], center = true);
-          translate([0, 1.5, 0])
-            rotate([0, 30, 0])
-              rotate([90, 0, 0])
-                cylinder(d = 1.85 * 2 / sqrt(3), h = 60, center = true, $fn = 6);
-        }
+    union() {
       difference() {
-        cube([10, hinge_size_y_inner - gap * 2, 10], center = true);
-        rotate([0, 30, 0])
-          rotate([90, 0, 0])
-            cylinder(d = d_pin_hole, h = 48, center = true, $fn = 6);
-        translate([0, 0, -5])
-          cube([d_pin_hole * cos(30), hinge_size_y_inner - gap * 2, 10], center = true);
+        translate([0, hinge_offset_y, 0])
+          union() {
+            rotate([90, 0, 0])
+              cylinder(r = hinge_outer_r + gap, h = hinge_size_y + gap * 2, center = true, $fn = 60);
+            translate([0, 0, (hinge_outer_r + gap) * sin(50)])
+              linear_extrude((hinge_outer_r + gap) * cos(50) * tan(40), scale = [0, 1])
+                square([(hinge_outer_r + gap) * 2 * cos(50), hinge_size_y + gap * 2], center = true);
+            mirror([0, 0, 1])
+              linear_extrude(hinge_outer_r * 1.2)
+                square([(hinge_outer_r + gap) * 2, hinge_size_y + gap * 2], center = true);
+            translate([0, pin_offset_y, 0])
+              rotate([0, 30, 0])
+                rotate([90, 0, 0])
+                  cylinder(d = 1.85 * 2 / sqrt(3), h = 55, center = true, $fn = 6);// hinge pin hex-hole
+          }
+        difference() {
+          cube([10, hinge_size_y_inner - gap * 2, 10], center = true);
+          rotate([0, 30, 0])
+            rotate([90, 0, 0])
+              cylinder(d = d_pin_hole, h = 48, center = true, $fn = 6);
+          translate([0, 0, -5])
+            cube([d_pin_hole * cos(30), hinge_size_y_inner - gap * 2, 10], center = true);
+        }
+        translate([5 + d_pin_hole / 2 * cos(30), 0, 0])
+          cube([10, 50, 10], center = true);
       }
-      translate([5 + d_pin_hole / 2 * cos(30), 0, 0])
-        cube([10, 50, 10], center = true);
+      translate([0, hinge_offset_y + pin_offset_y, -4])
+        cube([0.8, 57, 8], center = true);
     }
 }
 
