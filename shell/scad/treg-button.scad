@@ -128,7 +128,7 @@ module button_hook_support() {
         }
 }
 
-hinge_offset_x = -0.2;
+hinge_offset_x = -0.1;
 hinge_offset_y = 0.25;
 hinge_offset_z = 2.4;
 hinge_outer_r = 2.5;
@@ -167,7 +167,7 @@ module button_hinge_support_hole_button() {
 }
 
 module button_hinge_support_hole() {
-  gap = 0.5;
+  gap = 0.3;
   pin_offset_y = 1.5;
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2] - base_h + hinge_offset_z])
     union() {
