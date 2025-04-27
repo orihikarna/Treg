@@ -7,6 +7,8 @@ switch_d1 = 8.0;// 6 + 1.6 = 7.6
 switch_d2 = 3.0;// 3.4 - 1.6 = 1.8 -> 2.4
 switch_h1 = 30.6;
 switch_h2 = 18;
+switch_angle = 40;
+switch_wire_d = 6;
 
 module switch_hole_section() {
   mirror([1, 0, 0])
@@ -19,8 +21,8 @@ module switch_hole_section() {
 }
 
 module switch_hole() {
-  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y + 5, 2 - center[2] - _clr]) {
-    rotate([45, 0, 0])
+  translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y + 6, 9 - center[2] - _clr]) {
+    rotate([switch_angle, 0, 0])
       union() {
         translate([0, 0, -base_h * 0])
           linear_extrude(switch_w + _clr + base_h * 0)
@@ -30,5 +32,11 @@ module switch_hole() {
             rotate([0, +90, 0])
               cylinder(d = 1.9, h = 8, $fn = 6, center = true);
       }
+    // wire hole
+    translate([-switch_wire_d / 2, -4, 0]) {
+      mirror([0, 0, 1])
+        linear_extrude(18)
+          square([switch_wire_d + _clr, 3], center = true);
+    }
   }
 }

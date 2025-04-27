@@ -6,19 +6,9 @@ pcba_sensor_pos = 12;
 
 module pcba_hole() {
   translate([0, pcba_size[1] / 2 - pcba_sensor_pos, -center[2] - 0.6])
-    mirror([0, 0, 1]) {
+    mirror([0, 0, 1])
       linear_extrude(base_h + _clr)
         square(pcba_size, center = true);// pcba plate
-      translate([0, 12.4, 3]) {// switch wire
-        linear_extrude(base_h)
-          square([100, 3], center = true);
-        translate([0, 0, _clr])
-          mirror([0, 0, 1])
-            linear_extrude(3.0 / 2, scale = [1, 0]) {
-              square([100, 3], center = true);
-            }
-      }
-    }
   translate([0, 0, -center[2]])
     cylinder(d = 8, h = 2, center = true, $fn = 90);
 }
