@@ -28,7 +28,7 @@ if (true) {
     translate([0, -200 + 60, 0])
       cube(400, center = true);// extract ball & button part
     translate([btn_offset_x, btn_offset_y, -center[2] - base_h + 22])
-      cube([30, 70, 44], center = true);// extract button area
+      cube([29.2, 70, 44], center = true);// extract button area
   }
 }
 if (false) {

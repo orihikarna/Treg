@@ -16,7 +16,7 @@ mkw_r = 1.6;
 hole_mkw_r = hole_r + mkw_r;
 egg_mkw_scale = [egg_scale[0] - mkw_r, egg_scale[1] - mkw_r, egg_scale[2] - mkw_r];
 
-btn_offset_x = 31;
+btn_offset_x = 30.5;
 btn_offset_y = 24;
 btn_ear_hole_gap = 0.3;
 btn_ear_thick = 1.6;
@@ -24,3 +24,5 @@ btn_ear_btm_thick = 1.2;
 btn_ear_hole_thick = 2.6;
 btn_ear_roffset = 1.6;
 btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
+
+pcba_offset_z = 0.6;
