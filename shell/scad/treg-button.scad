@@ -201,8 +201,9 @@ module button_hinge_support_hole() {
       }
       // pin access slot
       difference() {
-        translate([d_pin_hole / 4 - d_pin_hole / 2.0, hinge_offset_y + pin_offset_y, -4])
-          cube([d_pin_hole / 2 + _clr, 55, 8], center = true);
+        h = hinge_offset_z - 0.2;
+        translate([0, hinge_offset_y + pin_offset_y, -h / 2])
+          cube([d_pin_hole / 2 + _clr, 55, h], center = true);
         cube([10, hinge_size_y, 10], center = true);
       }
     }

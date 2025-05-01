@@ -139,10 +139,10 @@ module support_ball_holes() {
     rotate([0, 0, azim[i]])
       rotate([elev[i], 0, 0])
         translate([0, 0, -hole_r]) {
-          cylinder(h = 2.6, d = 2.6, center = true, $fn = 64);
+          cylinder(h = 2.6, d = 2.5, center = true, $fn = 64);
           //   translate([0, 0, -20])
           //     cylinder(h = 40, d = 1.4, center = true, $fn = 64);
-          rotate([0, 90, 0])
+          rotate([90, 0, 0])
             cylinder(h = 0.8, d = 4.2, center = true, $fn = 64);
         }
 }

@@ -7,7 +7,7 @@ switch_d1 = 8.0;// 6 + 1.6 = 7.6
 switch_d2 = 3.0;// 3.4 - 1.6 = 1.8 -> 2.4
 switch_h1 = 30.6;
 switch_h2 = 18;
-switch_angle = 40;
+switch_angle = 35;
 switch_wire_d = switch_d1 + switch_d2;
 switch_wire_w = 3;
 
@@ -23,7 +23,7 @@ module switch_hole_section() {
 
 module switch_hole() {
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2]]) {
-    translate([0, 6, 6])
+    translate([0, 6, 4])
       rotate([switch_angle, 0, 0])
         union() {
           translate([0, 0, -base_h * 0])
@@ -32,7 +32,8 @@ module switch_hole() {
           for(sgn = [-1, +1])
             translate([-switch_d1, sgn * 12, switch_w / 2])
               rotate([0, +90, 0])
-                cylinder(d = 1.9, h = 8, $fn = 6, center = true);
+                rotate([0, 0, -switch_angle])
+                  cylinder(d = 1.9, h = 8, $fn = 6, center = true);
         }
     // wire hole (verticcal)
     translate([-switch_wire_d / 2, 0, -base_h - _clr])
