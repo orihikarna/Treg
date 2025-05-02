@@ -27,8 +27,10 @@ if (true) {
     //   cube(400, center = true);
     translate([0, -200 + 60, 0])
       cube(400, center = true);// extract ball & button part
-    translate([btn_offset_x, btn_offset_y, -center[2] - base_h + 22])
-      cube([29.2, 70, 44], center = true);// extract button area
+  // translate([200, 0, 0])
+  //   cube(400, center = true);// extract left half
+  // translate([btn_offset_x, btn_offset_y, -center[2] - base_h + 22])
+  //   cube([29.2, 70, 44], center = true);// extract button area
   }
 }
 if (false) {

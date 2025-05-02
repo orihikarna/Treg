@@ -25,4 +25,7 @@ btn_ear_hole_thick = 2.6;
 btn_ear_roffset = 1.6;
 btn_ear_hole_roffset = btn_ear_roffset + btn_ear_hole_gap + 0.1;
 
+pcba_bare_size = [32, 48];
+pcba_hole_size = [pcba_bare_size[0] + 0.6, pcba_bare_size[1] + 0.6];
 pcba_offset_z = 0.6;
+pcba_support_h = 7.4 - 1.2 - 1.6;

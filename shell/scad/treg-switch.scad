@@ -23,7 +23,7 @@ module switch_hole_section() {
 
 module switch_hole() {
   translate([btn_offset_x - btn_ear_hole_thick, btn_offset_y, -center[2]]) {
-    translate([0, 6, 4])
+    translate([0, 6, 3])
       rotate([switch_angle, 0, 0])
         union() {
           translate([0, 0, -base_h * 0])
@@ -40,13 +40,15 @@ module switch_hole() {
       linear_extrude(13)
         square([switch_wire_d + _clr, switch_wire_w], center = true);
     // wire hole (horizontal to pcba)
-    translate([-switch_wire_d, 0, -pcba_offset_z]) {
+    // w = btn_offset_x - btn_ear_hole_thick - (switch_d1 + switch_d2) - pcba_size[0] / 2;
+    w = 5;
+    translate([-switch_wire_d - w / 2, 0, -pcba_support_h]) {
       linear_extrude(switch_wire_w / 2 * tan(40), scale = [1, 0])
-        square([10, switch_wire_w], center = true);
+        square([w + _clr, switch_wire_w], center = true);
       translate([0, 0, _clr])
         mirror([0, 0, 1])
           linear_extrude(base_h + _clr)
-            square([10, switch_wire_w], center = true);
+            square([w + _clr, switch_wire_w], center = true);
     }
   }
 }

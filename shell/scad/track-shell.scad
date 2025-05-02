@@ -143,6 +143,6 @@ module support_ball_holes() {
           //   translate([0, 0, -20])
           //     cylinder(h = 40, d = 1.4, center = true, $fn = 64);
           rotate([90, 0, 0])
-            cylinder(h = 0.8, d = 4.2, center = true, $fn = 64);
+            cylinder(h = 1.0, d = 4.2, center = true, $fn = 64);
         }
 }
