@@ -38,10 +38,10 @@ pcb = pcbnew.GetBoard()
 GND = pcb.FindNet("GND")
 VCC = pcb.FindNet("3V3")
 
-board_width = 33
-board_height = 2.54 * 7
+board_width = 34
+board_height = 40  # 2.54 * 7
 board_size = (board_width, board_height)
-board_orig = (100, 80)
+board_orig = (100, 100)
 
 
 def place_mods():
@@ -49,9 +49,45 @@ def place_mods():
         board_orig,
         0,
         [
-            ("J1", (0, 3.82), 0),
-            ("C1", (9.4, -2.38), 0),
-            ("C2", (2.4, -1.08), -90),
+            (
+                None,
+                (0, 0),
+                0,
+                [
+                    ("U1", (-5.4, 0), 0),
+                    ("C1", (-7.5, 8), -90),
+                    ("C2", (-8.5, 8), -90),
+                    ("R1", (+7.5, 8 - 6), -90),
+                    ("R2", (+7.5, 8 + 4), -90),
+                ],
+            ),
+            (
+                None,
+                (0, 30),
+                180,
+                [
+                    ("U3", (0, 0), 0),
+                    ("J7", (-2.54 * 3, -2.54 * 3), 0),
+                    ("J8", (+2.54 * 3, -2.54 * 3), 0),
+                ],
+            ),
+            (
+                None,
+                (-20, 0),
+                0,
+                [
+                    ("U2", (0, 0), 0),
+                    ("C11", (-3.7, 0), -90),
+                    ("C12", (-5.2, 0), -90),
+                    ("C13", (+3.7, 0), -90),
+                    ("R3", (+5.2, 0), -90),
+                    ("R4", (+0.9, +2.5), 180),
+                    ("C14", (+0.9, -2.5), 180),
+                ],
+            ),
+            # ("J1", (0, 3.82), 0),
+            # ("C1", (9.4, -2.38), 0),
+            # ("C2", (2.4, -1.08), -90),
             # (
             #     None,
             #     (12, 0),
@@ -84,6 +120,17 @@ def place_mods():
             # ),
         ],
     )
+    for n in range(6):
+        kad.move_mods(
+            vec2.add(board_orig, (10 * n, -10)),
+            0,
+            [
+                (f"R{11+2*n}", (-1.5, 0), 90),
+                (f"R{12+2*n}", (0, 0), -90),
+                (f"C2{n+1}", (1.5, 0), 90),
+                (f"J{n+1}", (-1.27, -2.54), 90),
+            ],
+        )
 
 
 w_pwr, r_pwr = 0.60, 1.5  # power
@@ -97,9 +144,7 @@ def wire_mod():
     rj45 = "J1"
     xiao_l = "J3"
     xiao_r = "J4"
-    via_3v3_led = kad.add_via(
-        kad.calc_pos_from_pad(rj45, "23", (0.6, -1.8)), VCC, via_size_pwr
-    )
+    via_3v3_led = kad.add_via(kad.calc_pos_from_pad(rj45, "23", (0.6, -1.8)), VCC, via_size_pwr)
     # RJ45 - xiao_r
     via_5vd = kad.add_via_relative(rj45, "2", (0, -3.8), via_size_pwr)
     kad.wire_mod_pads(
@@ -255,17 +300,11 @@ def wire_mod():
 
     # gnd vias
     for pad in "1234567":
-        kad.add_via(
-            kad.calc_pos_from_pad(xiao_l, pad, (1.2, -2.54 / 2)), GND, via_size_dat
-        )
+        kad.add_via(kad.calc_pos_from_pad(xiao_l, pad, (1.2, -2.54 / 2)), GND, via_size_dat)
     for pad in ["1", "3", "5"]:
-        kad.add_via(
-            kad.calc_pos_from_pad(rj45, pad, (-2.02 / 2, 1.4)), GND, via_size_dat
-        )
+        kad.add_via(kad.calc_pos_from_pad(rj45, pad, (-2.02 / 2, 1.4)), GND, via_size_dat)
     for pad in ["15", "17"]:
-        kad.add_via(
-            kad.calc_pos_from_pad(rj45, pad, (+2.02 / 2, 1.4)), GND, via_size_dat
-        )
+        kad.add_via(kad.calc_pos_from_pad(rj45, pad, (+2.02 / 2, 1.4)), GND, via_size_dat)
     kad.add_via(kad.calc_pos_from_pad(rj45, "24", (+2.29 / 2, +1.2)), GND, via_size_dat)
     kad.add_via(kad.calc_pos_from_pad(rj45, "24", (+2.29 / 2, -1.2)), GND, via_size_dat)
     kad.add_via(kad.calc_pos_from_pad(rj45, "10", (+2.29 / 2, -1.2)), GND, via_size_dat)
@@ -328,13 +367,8 @@ def set_refs():
             ref = mod.Reference()
             set_text_prop(ref, pos, angle, offset_length, offset_angle, text_angle)
             for item in mod.GraphicalItems():
-                if (
-                    type(item) is pcbnew.FP_TEXT
-                    and item.GetShownText() == ref.GetShownText()
-                ):
-                    set_text_prop(
-                        item, pos, angle, offset_length, offset_angle, text_angle
-                    )
+                if type(item) is pcbnew.FP_TEXT and item.GetShownText() == ref.GetShownText():
+                    set_text_prop(item, pos, angle, offset_length, offset_angle, text_angle)
     tsz = 0.8
 
     # J1
@@ -346,139 +380,45 @@ def set_refs():
         # Right
         if pad == "FC":
             _pad = pad + "1"
-        pos = kad.calc_pos_from_pad(
-            "J1", f"{idx+1}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1))
-        )
-        kad.add_text(
-            pos,
-            angle,
-            _pad,
-            "F.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        pos = kad.calc_pos_from_pad("J1", f"{idx+1}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
+        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
         if idx in [1]:
             pos = kad.calc_pos_from_pad("J1", "2", (2.0, 0))
         elif idx in [3]:
             pos = kad.calc_pos_from_pad("J1", "6", (0.5, -2.8))
-        kad.add_text(
-            pos,
-            angle,
-            _pad,
-            "B.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
         # Left
         if pad == "FC":
             _pad = pad + "2"
-        pos = kad.calc_pos_from_pad(
-            "J1", f"{idx+13}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1))
-        )
+        pos = kad.calc_pos_from_pad("J1", f"{idx+13}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
         if idx in [4, 6]:
             pos = vec2.add(pos, (-4, -1.6))
-        kad.add_text(
-            pos,
-            angle,
-            _pad,
-            "F.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
-        kad.add_text(
-            pos,
-            angle,
-            _pad,
-            "B.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
 
     # J1
     angle = kad.get_mod_angle("J1") - 180
     pads = [(9, "D1"), (11, "D2"), (21, "D3"), (23, "D4")]
     for idx, (pin, pad) in enumerate(pads):
         pos = kad.calc_pos_from_pad("J1", f"{pin}", (0, 1.6))
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "F.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "B.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
 
     # J3
     angle = kad.get_mod_angle("J3") - 90
     pads = ["FC1", "FC2", "nR", "D4", "SD", "SC", "x"]
     for idx, pad in enumerate(pads):
         pos = kad.calc_pos_from_pad("J3", f"{idx+1}", (1.6, 0))
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "F.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "B.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
 
     # J4
     angle = kad.get_mod_angle("J4") + 90
     pads = ["5V", "GD", "3V", "D1", "D2", "x", "D3"]
     for idx, pad in enumerate(pads):
         pos = kad.calc_pos_from_pad("J4", f"{idx+1}", (-1.1, -1.27))
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "F.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
-        kad.add_text(
-            pos,
-            angle,
-            pad,
-            "B.SilkS",
-            (tsz, tsz),
-            0.15,
-            pcbnew.GR_TEXT_HJUSTIFY_CENTER,
-            pcbnew.GR_TEXT_VJUSTIFY_CENTER,
-        )
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
 
 
 def add_zone(net_name, layer_name, rect):
@@ -495,7 +435,7 @@ def add_zone(net_name, layer_name, rect):
 def main():
     place_mods()
     # wire_mod()
-    # draw_edge_cuts()
+    draw_edge_cuts()
     # set_refs()
 
     # logo
@@ -504,9 +444,7 @@ def main():
             kad.move_mods((90, 87), 0, [(mod, (0, 0), angle)])
 
     # zones
-    rect = kad.make_rect(
-        vec2.scale(1.1, board_size), vec2.scale(-0.5 * 1.1, board_size, board_orig)
-    )
+    rect = kad.make_rect(vec2.scale(1.1, board_size), vec2.scale(-0.5 * 1.1, board_size, board_orig))
     # for layer in Cu_layers:
     #     add_zone("GND", layer, rect)
 

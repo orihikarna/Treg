@@ -14,6 +14,10 @@ def scalar_to_unit(v, mm_or_mils):
         return pcbnew.FromMils(v)
 
 
+def to_ANGLE(angle):
+    return pcbnew.EDA_ANGLE(angle)
+
+
 pcb = pcbnew.GetBoard()
 
 # wire types
@@ -143,16 +147,11 @@ def add_text(
     vjustify=None,
 ):
     text = pcbnew.PCB_TEXT(pcb)
-    # text.SetPosition(pnt.to_unit(vec2.round(pos, PointDigits), UnitMM))
-    _pos = pnt.to_unit(vec2.round(pos, PointDigits), UnitMM)
-    text.SetPosition(pcbnew.VECTOR2I(_pos[0], _pos[1]))
-    # text.SetTextAngle(angle * 10)
-    text.SetTextAngle(pcbnew.EDA_ANGLE(angle * 10))
+    text.SetPosition(pnt.to_VEC2I(pnt.to_unit(vec2.round(pos, PointDigits), UnitMM)))
+    text.SetTextAngle(to_ANGLE((angle)))
     text.SetText(string)
     text.SetLayer(pcb.GetLayerID(layer))
-    # text.SetTextSize(pcbnew.wxSizeMM(size[0], size[1]))
-    _size = pcbnew.wxSizeMM(size[0], size[1])
-    text.SetTextSize(pcbnew.VECTOR2I(_size[0], _size[1]))
+    text.SetTextSize(pnt.to_VEC2I(pcbnew.wxSizeMM(size[0], size[1])))
     text.SetTextThickness(scalar_to_unit(thick, UnitMM))
     text.SetMirrored(layer[0] == "B")
     if hjustify != None:
@@ -259,11 +258,8 @@ def get_mod_pos_angle(mod_name):
 def set_mod_pos_angle(mod_name, pos, angle):
     mod = get_mod(mod_name)
     if pos is not None:
-        # mod.SetPosition(pnt.to_unit(vec2.round(pos, PointDigits), UnitMM))
-        _pos = pnt.to_unit(vec2.round(pos, PointDigits), UnitMM)
-        mod.SetPosition(pcbnew.VECTOR2I(_pos[0], _pos[1]))
-    # mod.SetOrientation(10 * angle)
-    mod.SetOrientation(pcbnew.EDA_ANGLE(10 * angle))
+        mod.SetPosition(pnt.to_VEC2I(pnt.to_unit(vec2.round(pos, PointDigits), UnitMM)))
+    mod.SetOrientation(to_ANGLE(angle))
     return mod
 
 
