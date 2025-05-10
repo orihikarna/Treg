@@ -68,8 +68,8 @@ def add_line(a, b, layer="Edge.Cuts", width=2):
             None
     line = pcbnew.PCB_SHAPE(pcb)
     line.SetShape(pcbnew.SHAPE_T_SEGMENT)
-    line.SetStart(pnt_a)
-    line.SetEnd(pnt_b)
+    line.SetStart(pnt.to_VEC2I(pnt_a))
+    line.SetEnd(pnt.to_VEC2I(pnt_b))
     line.SetLayer(pcb.GetLayerID(layer))
     line.SetWidth(scalar_to_unit(width, UnitMM))
     pcb.Add(line)
@@ -103,9 +103,9 @@ def add_arc2(ctr, pos, end, angle, layer="Edge.Cuts", width=2):
     pnt_end = pnt.to_unit(vec2.round(end, PointDigits), UnitMM)
     arc = pcbnew.PCB_SHAPE(pcb)
     arc.SetShape(pcbnew.SHAPE_T_ARC)
-    arc.SetCenter(pnt_ctr)
-    arc.SetStart(pnt_pos)
-    arc.SetArcAngleAndEnd(10 * angle, True)
+    arc.SetCenter(pnt.to_VEC2I(pnt_ctr))
+    arc.SetStart(pnt.to_VEC2I(pnt_pos))
+    arc.SetArcAngleAndEnd(to_ANGLE(angle), True)
     arc.SetLayer(pcb.GetLayerID(layer))
     arc.SetWidth(scalar_to_unit(width, UnitMM))
     pcb.Add(arc)
@@ -384,9 +384,7 @@ def add_wire_straight(pnts, net, layer, width, radii):
             auvec = vec2.scale(1 / alen, avec)
             buvec = vec2.scale(1 / blen, bvec)
             # rpnts += vec2.make_bezier_corner( curr, auvec, buvec, length, num_divs, debug )
-            rpnts += vec2.make_arc_corner(
-                curr, auvec, buvec, side_len, radius, num_divs, debug
-            )
+            rpnts += vec2.make_arc_corner(curr, auvec, buvec, side_len, radius, num_divs, debug)
     for idx, curr in enumerate(rpnts):
         if idx == 0:
             prev = rpnts[0]
@@ -400,9 +398,7 @@ def add_wire_straight(pnts, net, layer, width, radii):
 # params: pos, (offset length, offset angle / arc center) x n, direction angle
 
 
-def add_wire_offsets_directed(
-    prms_a, prms_b, net, layer, width, radius, arc_ctr_mid=None
-):
+def add_wire_offsets_directed(prms_a, prms_b, net, layer, width, radius, arc_ctr_mid=None):
     def _make_points_from_offsets(start_pos, offsets, angle, radius):
         pos = start_pos
         pnts = [pos]
@@ -480,17 +476,11 @@ def add_wire_zigzag(pos_a, pos_b, angle, delta_angle, net, layer, width, radius)
     _, ka1, _ = vec2.find_intersection(pos_a, dir, mid_pos, mid_dir1)
     _, ka2, _ = vec2.find_intersection(pos_a, dir, mid_pos, mid_dir2)
     mid_angle = (angle - delta_angle) if abs(ka1) < abs(ka2) else (angle + delta_angle)
-    add_wire_offsets_directed(
-        (pos_a, [], angle), (mid_pos, [], mid_angle), net, layer, width, radius
-    )
-    add_wire_offsets_directed(
-        (pos_b, [], angle), (mid_pos, [], mid_angle), net, layer, width, radius
-    )
+    add_wire_offsets_directed((pos_a, [], angle), (mid_pos, [], mid_angle), net, layer, width, radius)
+    add_wire_offsets_directed((pos_b, [], angle), (mid_pos, [], mid_angle), net, layer, width, radius)
 
 
-def __wire_mod_sub(
-    pos_a, angle_a, sign_a, pos_b, angle_b, sign_b, net, layer, width, prms
-):
+def __wire_mod_sub(pos_a, angle_a, sign_a, pos_b, angle_b, sign_b, net, layer, width, prms):
     def _proc_directed_params(prms, angle, sign):
         offsets = []
         if type(prms) == type([]):  # array
@@ -513,9 +503,7 @@ def __wire_mod_sub(
         #
         radius = prms[3] if len(prms) > 3 else inf
         arc_ctr_mid = prms[4] if len(prms) > 4 else None
-        add_wire_offsets_directed(
-            prms2_a, prms2_b, net, layer, width, radius, arc_ctr_mid
-        )
+        add_wire_offsets_directed(prms2_a, prms2_b, net, layer, width, radius, arc_ctr_mid)
     elif prms[0] == ZigZag:
         dangle, delta_angle = prms[1:3]
         radius = prms[3] if len(prms) > 3 else inf
@@ -574,9 +562,7 @@ def wire_mod_pads(tracks):
                 layer = layer_BCu if layer == layer_FCu else layer_FCu
             else:
                 layer = track[6]
-        __wire_mod_sub(
-            pos_a, angle_a, sign_a, pos_b, angle_b, sign_b, net, layer, width, prms
-        )
+        __wire_mod_sub(pos_a, angle_a, sign_a, pos_b, angle_b, sign_b, net, layer, width, prms)
 
 
 ##
@@ -788,9 +774,7 @@ def draw_corner(cnr_type, a, cnr_data, b, layer, width):
         ndivs = int(round(vec2.distance(apos, bpos) / 2.0))
         auvec = vec2.rotate(aangle + 90)
         buvec = vec2.rotate(bangle - 90)
-        curv = vec2.interpolate_points_by_hermit_spline(
-            apos, auvec, bpos, buvec, ndivs, vec_scale
-        )
+        curv = vec2.interpolate_points_by_hermit_spline(apos, auvec, bpos, buvec, ndivs, vec_scale)
         add_lines(curv, layer, width)
     return b, curv
 
@@ -840,6 +824,4 @@ def add_rule_area(pnts, layer):
 
 def make_rect(size, offset=(0, 0)):
     FourCorners = [(0, 0), (1, 0), (1, 1), (0, 1)]
-    return [
-        vec2.add((size[0] * cnr[0], size[1] * cnr[1]), offset) for cnr in FourCorners
-    ]
+    return [vec2.add((size[0] * cnr[0], size[1] * cnr[1]), offset) for cnr in FourCorners]

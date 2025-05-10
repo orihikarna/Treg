@@ -39,7 +39,7 @@ GND = pcb.FindNet("GND")
 VCC = pcb.FindNet("3V3")
 
 board_width = 34
-board_height = 40  # 2.54 * 7
+board_height = 45  # 2.54 * 7
 board_size = (board_width, board_height)
 board_orig = (100, 100)
 
@@ -51,10 +51,10 @@ def place_mods():
         [
             (
                 None,
-                (0, 0),
+                (0, -11),
                 0,
                 [
-                    ("U1", (-5.4, 0), 0),
+                    ("U1", (0, 0), 0),
                     ("C1", (-7.5, 8), -90),
                     ("C2", (-8.5, 8), -90),
                     ("R1", (+7.5, 8 - 6), -90),
@@ -63,7 +63,7 @@ def place_mods():
             ),
             (
                 None,
-                (0, 30),
+                (0, 12),
                 180,
                 [
                     ("U3", (0, 0), 0),
@@ -153,15 +153,7 @@ def wire_mod():
             (xiao_r, "1", rj45, via_5vd, w_pwr, (Dird, 45, 90), "F.Cu"),
             # 5VD
             (rj45, "4", rj45, via_5vd, w_pwr, (Dird, [(+90, 1.5), 0], 90), "F.Cu"),
-            (
-                rj45,
-                "16",
-                rj45,
-                via_5vd,
-                w_pwr,
-                (Dird, [(+90, 1.5), 0], 90, r_led),
-                "F.Cu",
-            ),
+            (rj45, "16", rj45, via_5vd, w_pwr, (Dird, [(+90, 1.5), 0], 90, r_led), "F.Cu"),
             (rj45, "16", rj45, "4", w_pwr, (Dird, [(+90, 1.5), 0], 90, r_led), "F.Cu"),
             # GND
             # (xiao_r, "2", rj45, "2", w_pwr, (Dird, -45, 90), "In2.Cu"),
@@ -171,15 +163,7 @@ def wire_mod():
             (rj45, "6", rj45, "18", w_pwr, (Dird, [(+90, 1.5), 0], 90, r_tri), "B.Cu"),
             (rj45, "18", rj45, via_3v3_led, w_pwr, (Dird, 90, -45, r_pwr), "F.Cu"),
             # LED1/2/3
-            (
-                xiao_r,
-                "4",
-                rj45,
-                "9",
-                w_led,
-                (Dird, -45, [(-135, 2.0), (180, 1.7), (135, 2.0), 0], r_led),
-                "In1.Cu",
-            ),
+            (xiao_r, "4", rj45, "9", w_led, (Dird, -45, [(-135, 2.0), (180, 1.7), (135, 2.0), 0], r_led), "In1.Cu"),
             (xiao_r, "5", rj45, "11", w_led, (Dird, -45, 90), "In1.Cu"),
             (xiao_r, "7", rj45, "21", w_led, (Dird, -45, 90), "In1.Cu"),
         ]
@@ -191,26 +175,10 @@ def wire_mod():
         [
             # Full colr LED
             (xiao_l, "1", rj45, "1", w_dat, (Dird, [(0, 2), -45], 90), "In1.Cu"),
-            (
-                xiao_l,
-                "2",
-                rj45,
-                "13",
-                w_dat,
-                (Dird, [(0, 3.2), 90], [(0, 5.6), -45], r_led),
-                "In1.Cu",
-            ),
+            (xiao_l, "2", rj45, "13", w_dat, (Dird, [(0, 3.2), 90], [(0, 5.6), -45], r_led), "In1.Cu"),
             # NRST
             (xiao_l, "3", rj45, "5", w_dat, (ZgZg, 0, 45), "F.Cu"),
-            (
-                xiao_l,
-                "3",
-                rj45,
-                "17",
-                w_dat,
-                (Dird, [(0, 2.2), 90], 90, r_led),
-                "In2.Cu",
-            ),
+            (xiao_l, "3", rj45, "17", w_dat, (Dird, [(0, 2.2), 90], 90, r_led), "In2.Cu"),
             # SCK
             (rj45, "3", rj45, "15", w_dat, (Dird, [(-90, 2.4), 0], 90, r_dat), "B.Cu"),
             (rj45, "3", xiao_l, "6", w_dat, (Dird, [(-90, 2.4), 0], 0, r_dat), "B.Cu"),
@@ -228,24 +196,8 @@ def wire_mod():
     via_left = kad.add_via_relative(rj45, "20", (-1.6, 0), via_size_pwr)
     kad.wire_mod_pads(
         [
-            (
-                rj45,
-                "18",
-                rj45,
-                via_left,
-                w_led,
-                (Dird, [(90, 1.5), 0], 90, r_led),
-                "B.Cu",
-            ),
-            (
-                rj45,
-                via_left,
-                "R12",
-                "2",
-                w_led,
-                (Dird, [(-90, 0.4), (-60, 3.2), 90], 0, r_led),
-                "B.Cu",
-            ),
+            (rj45, "18", rj45, via_left, w_led, (Dird, [(90, 1.5), 0], 90, r_led), "B.Cu"),
+            (rj45, via_left, "R12", "2", w_led, (Dird, [(-90, 0.4), (-60, 3.2), 90], 0, r_led), "B.Cu"),
             ("R11", "2", "R12", "2", w_led, (ZgZg, 90, 45), "B.Cu"),
         ]
     )
@@ -256,31 +208,10 @@ def wire_mod():
             (rj45, "24", "R4", "2", w_led, (Dird, 90, [(0, 1.6), 90], r_led), "B.Cu"),
             (rj45, "22", "R3", "2", w_led, (Dird, 90, [(0, 0.0), 90], r_led), "B.Cu"),
             (rj45, "12", "R2", "2", w_led, (Dird, 90, [(0, 1.0), 90], r_led), "B.Cu"),
-            (
-                rj45,
-                "10",
-                "R1",
-                "2",
-                w_led,
-                (
-                    Dird,
-                    0,
-                    [(0, 1.8), (-90, 10), (-135, 0.5 * 1.414), (-90, 3.2), -135],
-                    r_led,
-                ),
-                "B.Cu",
-            ),
+            (rj45, "10", "R1", "2", w_led, (Dird, 0, [(0, 1.8), (-90, 10), (-135, 0.5 * 1.414), (-90, 3.2), -135], r_led), "B.Cu"),
             # LED4
             (rj45, "23", rj45, via_left, w_led, (ZgZg, 90, 30), "In1.Cu"),
-            (
-                xiao_l,
-                "4",
-                rj45,
-                via_left,
-                w_led,
-                (Dird, [(0, 2.2), 90], [(-90, 0.4), -60], r_led),
-                "In1.Cu",
-            ),
+            (xiao_l, "4", rj45, via_left, w_led, (Dird, [(0, 2.2), 90], [(-90, 0.4), -60], r_led), "In1.Cu"),
             # 3V3
             (rj45, via_3v3_led, "R4", "1", w_pwr, (Dird, -45, 90, r_tri), "B.Cu"),
             ("R4", "1", "R3", "1", w_pwr, (Strt), "B.Cu"),
@@ -317,8 +248,7 @@ def draw_edge_cuts():
     width = 0.12
 
     Radius = 0.64
-    Oy = vec2.add(kad.get_mod_pos("J3"), kad.get_mod_pos("J4"))[1] / 2
-    _org = (board_orig[0], Oy)
+    _org = board_orig
     cnrs = [
         ((vec2.add(_org, (0, -board_height / 2)), 0), Round, [Radius]),
         ((vec2.add(_org, (+board_width / 2, 0)), 90), Round, [Radius]),
