@@ -272,30 +272,50 @@ def set_text_prop(text, pos, angle, offset_length, offset_angle, text_angle):
     if text_angle == None:
         text.SetVisible(False)
     else:
-        # tsz = 1.0
-        tsz = 0.9
-        text.SetTextSize(pcbnew.wxSizeMM(tsz, tsz))
+        text.SetVisible(True)
+        tsz = 1.0
+        # tsz = 0.9
+        text.SetTextSize(pnt.to_VEC2I(pcbnew.wxSizeMM(tsz, tsz)))
         text.SetTextThickness(pcbnew.FromMM(0.18))
         pos_text = vec2.scale(offset_length, vec2.rotate(-(offset_angle + angle)), pos)
-        text.SetPosition(pnt.to_unit(vec2.round(pos_text, 3), True))
-        text.SetTextAngle(text_angle * 10)
+        text.SetPosition(pnt.to_VEC2I(pnt.to_unit(vec2.round(pos_text, 3), True)))
+        text.SetTextAngle(kad.to_ANGLE(text_angle))
         text.SetKeepUpright(False)
 
 
 def set_refs():
     # hide value texts
-    # for mod in pcb.GetFootprints():
-    #     ref = mod.Reference()
-    #     val = mod.Value()
-    #     val.SetVisible(False)
+    for mod in pcb.GetFootprints():
+        ref = mod.Reference()
+        val = mod.Value()
+        val.SetVisible(False)
+    # hide mounting holes
+    for n in range(4):
+        mod = kad.get_mod(f"H{n+1}")
+        ref = mod.Reference()
+        ref.SetVisible(False)
     refs = [
-        (3.2, 90, 0, ["J1"]),
-        (2.4, 0, -90, ["R1", "R3"]),
-        (2.4, 180, 90, ["R2", "R4"]),
-        (1.8, -135, 180, ["R11"]),
-        (3.2, 180, 0, ["R12"]),
-        (1.6, 90, 0, ["C1"]),
-        (1.6, -90, 180, ["C2"]),
+        # PMW3360
+        (9.6, -90, 0, ["U1"]),
+        (3.2, 180, 0, ["R1", "R2", "C4", "C6"]),
+        (6.6, -90, 0, ["C1", "C2", "C3", "C5"]),
+        # LDO
+        (0, 0, 0, ["U2"]),
+        (3.0, +90, 0, ["R3", "C13"]),
+        (3.0, -90, 0, ["C11", "C12"]),
+        (3.2, 180, 90, ["R4", "C14"]),
+        # xiao
+        (14, 55, 0, ["U3"]),
+        (None, None, None, ["J7", "J8", "J9"]),
+        # switches
+        (1.8, 90, 0, [f"J{n+1}" for n in range(5)]),
+        (1.5, 90, 0, [f"R{2*n+11}" for n in range(5)]),
+        (1.5, 90, None, [f"R{2*n+12}" for n in range(5)]),
+        (1.5, 90, None, [f"C2{n+1}" for n in range(5)]),
+        (1.5, -90, 0, ["C22", "C25"]),
+        (3.2, 180, 0, ["C23", "C24"]),
+        (3.2, 180, 0, ["R15", "R17"]),
+        (3.2, 0, 0, ["R16", "R18"]),
     ]
     for offset_length, offset_angle, text_angle, mod_names in refs:
         for mod_name in mod_names:
@@ -305,11 +325,27 @@ def set_refs():
             pos, angle = kad.get_mod_pos_angle(mod_name)
             ref = mod.Reference()
             set_text_prop(ref, pos, angle, offset_length, offset_angle, text_angle)
-            for item in mod.GraphicalItems():
-                if type(item) is pcbnew.FP_TEXT and item.GetShownText() == ref.GetShownText():
-                    set_text_prop(item, pos, angle, offset_length, offset_angle, text_angle)
-    tsz = 0.8
-
+            # for item in mod.GraphicalItems():
+            #     print(f"{type(item) = }")
+            # if type(item) is pcbnew.PCB_TEXT and item.GetShownText() == ref.GetShownText():
+            #     set_text_prop(item, pos, angle, offset_length, offset_angle, text_angle)
+    tsz = 1.0
+    # J7
+    angle = 180
+    pads = ["DSW1", "DSW2", "DSW3", "DSW4", "DSW5", "nCS", "nRST"]
+    for idx, pad in enumerate(pads):
+        pos = kad.calc_pos_from_pad("J7", f"{idx+1}", (-1.6, 0))
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+    # J8
+    angle = 180
+    pads = ["VBUS", "GND", "3V3", "MOSI", "MISO", "SCLK", "MOTION"]
+    for idx, pad in enumerate(pads):
+        pos = kad.calc_pos_from_pad("J8", f"{idx+1}", (+1.6, 0))
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+    return
+    # tsz = 0.8
     # J1
     angle = kad.get_mod_angle("J1")
     # pads = ["RGB", "GND", "SCK", "5VD", "nRST", "3V3", "SDA", "GND"]
@@ -320,44 +356,44 @@ def set_refs():
         if pad == "FC":
             _pad = pad + "1"
         pos = kad.calc_pos_from_pad("J1", f"{idx+1}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
-        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         if idx in [1]:
             pos = kad.calc_pos_from_pad("J1", "2", (2.0, 0))
         elif idx in [3]:
             pos = kad.calc_pos_from_pad("J1", "6", (0.5, -2.8))
-        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         # Left
         if pad == "FC":
             _pad = pad + "2"
         pos = kad.calc_pos_from_pad("J1", f"{idx+13}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
         if idx in [4, 6]:
             pos = vec2.add(pos, (-4, -1.6))
-        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
-        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
     # J1
     angle = kad.get_mod_angle("J1") - 180
     pads = [(9, "D1"), (11, "D2"), (21, "D3"), (23, "D4")]
     for idx, (pin, pad) in enumerate(pads):
         pos = kad.calc_pos_from_pad("J1", f"{pin}", (0, 1.6))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
     # J3
     angle = kad.get_mod_angle("J3") - 90
     pads = ["FC1", "FC2", "nR", "D4", "SD", "SC", "x"]
     for idx, pad in enumerate(pads):
         pos = kad.calc_pos_from_pad("J3", f"{idx+1}", (1.6, 0))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
     # J4
     angle = kad.get_mod_angle("J4") + 90
     pads = ["5V", "GD", "3V", "D1", "D2", "x", "D3"]
     for idx, pad in enumerate(pads):
         pos = kad.calc_pos_from_pad("J4", f"{idx+1}", (-1.1, -1.27))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_HJUSTIFY_CENTER, pcbnew.GR_TEXT_VJUSTIFY_CENTER)
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
 
 def add_zone(net_name, layer_name, rect):
@@ -375,7 +411,7 @@ def main():
     place_mods()
     # wire_mod()
     draw_edge_cuts()
-    # set_refs()
+    set_refs()
 
     # logo
     for mod, angle in [("G1", 180)]:

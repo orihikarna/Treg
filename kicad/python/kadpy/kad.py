@@ -15,7 +15,10 @@ def scalar_to_unit(v, mm_or_mils):
 
 
 def to_ANGLE(angle):
-    return pcbnew.EDA_ANGLE(angle)
+    if type(angle) == pcbnew.EDA_ANGLE:
+        return angle
+    else:
+        return pcbnew.EDA_ANGLE(angle)
 
 
 pcb = pcbnew.GetBoard()
@@ -223,7 +226,7 @@ def _get_mod_pos(mod):
 
 
 def _get_mod_angle(mod):
-    return mod.GetOrientation() / 10
+    return mod.GetOrientation().AsDegrees()
 
 
 def _get_mod_layer(mod):
