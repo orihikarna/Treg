@@ -90,39 +90,6 @@ def place_mods():
                     ("C14", (+0.9, -2.5), 180),
                 ],
             ),
-            # ("J1", (0, 3.82), 0),
-            # ("C1", (9.4, -2.38), 0),
-            # ("C2", (2.4, -1.08), -90),
-            # (
-            #     None,
-            #     (12, 0),
-            #     0,
-            #     [
-            #         # ("U1", (-18.114, 1.296 + 2.54 * 3 - 0), 90),
-            #         ("J3", (0, +2.54 * 3), 90),
-            #         ("J4", (0, -2.54 * 3), 90),
-            #     ],
-            # ),
-            # (
-            #     None,
-            #     (-10.4, -5.58),
-            #     0,
-            #     [
-            #         ("R4", (1.524 * 0, 0), -90),
-            #         ("R1", (1.524 * 1, 0), -90),
-            #         ("R2", (1.524 * 2, 0), -90),
-            #         ("R3", (1.524 * 3, 0), -90),
-            #     ],
-            # ),
-            # (
-            #     None,
-            #     (-9.3, 3.82),
-            #     0,
-            #     [
-            #         ("R11", (-0.2175, -0.74), 0),
-            #         ("R12", (0.9125 * 2 + 0.2175, 0.74), 180),
-            #     ],
-            # ),
         ],
     )
     for n in range(5):
@@ -339,59 +306,24 @@ def set_refs():
         kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
     # J8
     angle = 180
-    pads = ["VBUS", "GND", "3V3", "MOSI", "MISO", "SCLK", "MOTION"]
+    pads = ["VBUS", "GND", "3V3", "MOSI", "MISO", "SCLK", "MOTN"]
     for idx, pad in enumerate(pads):
         pos = kad.calc_pos_from_pad("J8", f"{idx+1}", (+1.6, 0))
         kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-    return
-    # tsz = 0.8
-    # J1
-    angle = kad.get_mod_angle("J1")
-    # pads = ["RGB", "GND", "SCK", "5VD", "nRST", "3V3", "SDA", "GND"]
-    pads = ["FC", "GD", "SC", "5V", "nR", "3V", "SD", "GD"]
+    # J9
+    angle = 90
+    pads = ["BAT+", "BAT-"]
     for idx, pad in enumerate(pads):
-        _pad = pad
-        # Right
-        if pad == "FC":
-            _pad = pad + "1"
-        pos = kad.calc_pos_from_pad("J1", f"{idx+1}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
-        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        if idx in [1]:
-            pos = kad.calc_pos_from_pad("J1", "2", (2.0, 0))
-        elif idx in [3]:
-            pos = kad.calc_pos_from_pad("J1", "6", (0.5, -2.8))
-        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        # Left
-        if pad == "FC":
-            _pad = pad + "2"
-        pos = kad.calc_pos_from_pad("J1", f"{idx+13}", (0, 1.6 * (1 if (idx + 1) % 2 == 1 else -1)))
-        if idx in [4, 6]:
-            pos = vec2.add(pos, (-4, -1.6))
-        kad.add_text(pos, angle, _pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        kad.add_text(pos, angle, _pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-
-    # J1
+        pos = kad.calc_pos_from_pad("J9", f"{idx+1}", (0, -1.6))
+        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+    return
+    # U1
     angle = kad.get_mod_angle("J1") - 180
     pads = [(9, "D1"), (11, "D2"), (21, "D3"), (23, "D4")]
     for idx, (pin, pad) in enumerate(pads):
         pos = kad.calc_pos_from_pad("J1", f"{pin}", (0, 1.6))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-
-    # J3
-    angle = kad.get_mod_angle("J3") - 90
-    pads = ["FC1", "FC2", "nR", "D4", "SD", "SC", "x"]
-    for idx, pad in enumerate(pads):
-        pos = kad.calc_pos_from_pad("J3", f"{idx+1}", (1.6, 0))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-
-    # J4
-    angle = kad.get_mod_angle("J4") + 90
-    pads = ["5V", "GD", "3V", "D1", "D2", "x", "D3"]
-    for idx, pad in enumerate(pads):
-        pos = kad.calc_pos_from_pad("J4", f"{idx+1}", (-1.1, -1.27))
         kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
@@ -424,16 +356,7 @@ def main():
     #     add_zone("GND", layer, rect)
 
     # name
-    kad.add_text(
-        (105, 84.4),
-        0,
-        f"orihikarna 25/06/30",
-        "B.Silkscreen",
-        (0.8, 0.8),
-        0.4,
-        pcbnew.GR_TEXT_H_ALIGN_CENTER,
-        pcbnew.GR_TEXT_V_ALIGN_CENTER,
-    )
+    kad.add_text((105, 84.4), 0, f"orihikarna 25/06/30", "F.Silkscreen", (0.8, 0.8), 0.4, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
 
 if __name__ == "__main__":
