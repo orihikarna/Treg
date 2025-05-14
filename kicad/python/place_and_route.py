@@ -55,14 +55,14 @@ def place_mods():
                 180,
                 [
                     ("U1", (0, 0), 0),
-                    ("C1", (+8.0, 5.66 - 0.89 * 2), 0),
-                    ("C2", (+8.0, 5.66 - 0.89 * 4), 0),
-                    ("C5", (+8.0, 5.66 - 0.89 * 6), 0),
-                    ("C3", (+8.0, 5.66 - 0.89 * 8), 0),
-                    ("R1", (-8.0, 5.66 - 0.89 * 3), 0),
-                    ("C6", (-8.0, 5.66 - 0.89 * 1), 0),
-                    ("R2", (-8.0, 5.66 - 0.89 * 9), 0),
-                    ("C4", (-8.0, 5.66 - 0.89 * 7), 0),
+                    ("C1", (+7.8, 5.66 - 0.89 * 2), 0),
+                    ("C2", (+7.8, 5.66 - 0.89 * 4), 0),
+                    ("C5", (+7.8, 5.66 - 0.89 * 6), 0),
+                    ("C3", (+7.8, 5.66 - 0.89 * 8), 0),
+                    ("R1", (-7.8, 5.66 - 0.89 * 3), 0),
+                    ("C6", (-7.8, 5.66 - 0.89 * 1), 0),
+                    ("R2", (-7.8, 5.66 - 0.89 * 9), 0),
+                    ("C4", (-7.8, 5.66 - 0.89 * 7), 0),
                 ],
             ),
             (  # xiao
@@ -82,10 +82,10 @@ def place_mods():
                 90,
                 [
                     ("U2", (0, 0), 0),
-                    ("C11", (-3.7, 0), -90),
-                    ("C12", (-5.2, 0), -90),
-                    ("C13", (+3.7, 0), -90),
-                    ("R3", (+5.2, 0), -90),
+                    ("C11", (-2.8, 0), -90),
+                    ("C12", (-4.3, 0), -90),
+                    ("C13", (+2.8, 0), -90),
+                    ("R3", (+4.3, 0), -90),
                     ("R4", (+0.9, +2.5), 180),
                     ("C14", (+0.9, -2.5), 180),
                 ],
@@ -97,9 +97,9 @@ def place_mods():
             vec2.add(board_orig, (-13, -2.54 * 2.5 * (n - 2))),
             90,
             [
-                (f"R{11+2*n}", (-1.5, 0.9), 90),
-                (f"R{12+2*n}", (0, 0.9), -90),
-                (f"C2{n+1}", (+1.5, 0.9), 90),
+                (f"R{11+2*n}", (-1.5, 0.8), 90),
+                (f"R{12+2*n}", (0, 0.8), -90),
+                (f"C2{n+1}", (+1.5, 0.8), 90),
                 (f"J{n+1}", (-1.27, -2.54), 90),
             ],
         )
@@ -240,8 +240,8 @@ def set_text_prop(text, pos, angle, offset_length, offset_angle, text_angle):
         text.SetVisible(False)
     else:
         text.SetVisible(True)
-        tsz = 1.0
-        # tsz = 0.9
+        # tsz = 1.0
+        tsz = 0.9
         text.SetTextSize(pnt.to_VEC2I(pcbnew.wxSizeMM(tsz, tsz)))
         text.SetTextThickness(pcbnew.FromMM(0.18))
         pos_text = vec2.scale(offset_length, vec2.rotate(-(offset_angle + angle)), pos)
@@ -264,8 +264,8 @@ def set_refs():
     refs = [
         # PMW3360
         (9.6, -90, 0, ["U1"]),
-        (3.2, 180, 0, ["R1", "R2", "C4", "C6"]),
-        (6.6, -90, 0, ["C1", "C2", "C3", "C5"]),
+        (2.0, 180, -90, ["R1", "R2", "C4", "C6"]),
+        (2.0, 0, +90, ["C1", "C2", "C3", "C5"]),
         # LDO
         (0, 0, 0, ["U2"]),
         (3.0, +90, 0, ["R3", "C13"]),
@@ -276,13 +276,12 @@ def set_refs():
         (None, None, None, ["J7", "J8", "J9"]),
         # switches
         (1.8, 90, 0, [f"J{n+1}" for n in range(5)]),
-        (1.5, 90, 0, [f"R{2*n+11}" for n in range(5)]),
-        (1.5, 90, None, [f"R{2*n+12}" for n in range(5)]),
-        (1.5, 90, None, [f"C2{n+1}" for n in range(5)]),
-        (1.5, -90, 0, ["C22", "C25"]),
-        (3.2, 180, 0, ["C23", "C24"]),
-        (3.2, 180, 0, ["R15", "R17"]),
-        (3.2, 0, 0, ["R16", "R18"]),
+        (2.2, 180 - 18, -90, [f"R{2*n+11}" for n in range(5)]),
+        (2.2, 18, -90, [f"R{2*n+12}" for n in range(5)]),
+        (1.3, -90, 0, [f"C2{n+1}" for n in range(5)]),
+        (0.7 + 1.5 * 2, -90, 0, ["C25"]),
+        (1.0 + 1.5 * 2, +90, 0, ["R20"]),
+        (1.3 + 1.5 * 2, -90, 0, ["R19"]),
     ]
     for offset_length, offset_angle, text_angle, mod_names in refs:
         for mod_name in mod_names:
@@ -296,7 +295,7 @@ def set_refs():
             #     print(f"{type(item) = }")
             # if type(item) is pcbnew.PCB_TEXT and item.GetShownText() == ref.GetShownText():
             #     set_text_prop(item, pos, angle, offset_length, offset_angle, text_angle)
-    tsz = 1.0
+    tsz = 0.9
     # J7
     angle = 180
     pads = ["DSW1", "DSW2", "DSW3", "DSW4", "DSW5", "nCS", "nRST"]
@@ -318,14 +317,38 @@ def set_refs():
         pos = kad.calc_pos_from_pad("J9", f"{idx+1}", (0, -1.6))
         kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-    return
     # U1
-    angle = kad.get_mod_angle("J1") - 180
-    pads = [(9, "D1"), (11, "D2"), (21, "D3"), (23, "D4")]
+    angle = kad.get_mod_angle("U1")
+    pads = [
+        (2, "NC"),
+        (3, "VPIX"),
+        (4, "1V9"),
+        (5, "3V3"),
+        (6, "NC"),
+        (7, "nRST"),
+        (8, "GND"),
+        (9, "MOTN"),
+        (10, "SCLK"),
+        (11, "MOSI"),
+        (12, "MISO"),
+        (13, "GND"),
+        (14, "NC"),
+        (15, "LED"),
+        (16, "NC"),
+    ]
     for idx, (pin, pad) in enumerate(pads):
-        pos = kad.calc_pos_from_pad("J1", f"{pin}", (0, 1.6))
-        kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
-        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.15, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        side = +1 if pin < 9 else -1
+        pos = kad.calc_pos_from_pad("U1", f"{pin}", (side, 0))
+        if True:  # Front
+            _pos = pos
+            if pin in [2, 3, 4, 5]:
+                _pos = vec2.add(_pos, (0, -1.78 * 4 - (pin - 5) * 0.4))
+            elif pin in [12, 13, 15, 16]:
+                _pos = vec2.add(_pos, (4.4, 0))
+            halign = pcbnew.GR_TEXT_H_ALIGN_LEFT if side > 0 else pcbnew.GR_TEXT_H_ALIGN_RIGHT
+            kad.add_text(_pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, halign, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+        halign = pcbnew.GR_TEXT_H_ALIGN_LEFT if side < 0 else pcbnew.GR_TEXT_H_ALIGN_RIGHT
+        kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, halign, pcbnew.GR_TEXT_V_ALIGN_CENTER)
 
 
 def add_zone(net_name, layer_name, rect):
@@ -356,7 +379,16 @@ def main():
     #     add_zone("GND", layer, rect)
 
     # name
-    kad.add_text((105, 84.4), 0, f"orihikarna 25/06/30", "F.Silkscreen", (0.8, 0.8), 0.4, pcbnew.GR_TEXT_H_ALIGN_CENTER, pcbnew.GR_TEXT_V_ALIGN_CENTER)
+    kad.add_text(
+        (board_orig[0] + 16, board_orig[1] - 6),
+        90,
+        f"orihikarna 2025/06/30",
+        "F.Silkscreen",
+        (0.8, 0.8),
+        0.4,
+        pcbnew.GR_TEXT_H_ALIGN_CENTER,
+        pcbnew.GR_TEXT_V_ALIGN_CENTER,
+    )
 
 
 if __name__ == "__main__":
