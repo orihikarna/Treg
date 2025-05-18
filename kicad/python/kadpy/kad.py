@@ -171,8 +171,8 @@ def add_text(
 
 
 def add_track(a, b, net, layer, width):
-    pnt_a = pnt.to_unit(vec2.round(a, PointDigits), UnitMM)
-    pnt_b = pnt.to_unit(vec2.round(b, PointDigits), UnitMM)
+    pnt_a = pnt.to_VEC2I(pnt.to_unit(vec2.round(a, PointDigits), UnitMM))
+    pnt_b = pnt.to_VEC2I(pnt.to_unit(vec2.round(b, PointDigits), UnitMM))
     track = pcbnew.PCB_TRACK(pcb)
     track.SetStart(pnt_a)
     track.SetEnd(pnt_b)

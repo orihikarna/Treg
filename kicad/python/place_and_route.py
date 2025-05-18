@@ -55,14 +55,14 @@ def place_mods():
                 180,
                 [
                     ("U1", (0, 0), 0),
-                    ("C1", (+7.8, 5.66 - 0.89 * 2), 0),
-                    ("C2", (+7.8, 5.66 - 0.89 * 4), 0),
-                    ("C5", (+7.8, 5.66 - 0.89 * 6), 0),
-                    ("C3", (+7.8, 5.66 - 0.89 * 8), 0),
-                    ("R1", (-7.8, 5.66 - 0.89 * 3), 0),
-                    ("C6", (-7.8, 5.66 - 0.89 * 1), 0),
-                    ("R2", (-7.8, 5.66 - 0.89 * 9), 0),
-                    ("C4", (-7.8, 5.66 - 0.89 * 7), 0),
+                    ("C1", (+8.0, 5.66 - 0.89 * 2), 0),
+                    ("C2", (+8.0, 5.66 - 0.89 * 4), 0),
+                    ("C5", (+8.0, 5.66 - 0.89 * 6), 0),
+                    ("C3", (+8.0, 5.66 - 0.89 * 8), 0),
+                    ("R1", (-8.0, 5.66 - 0.89 * 3), 0),
+                    ("C6", (-8.0, 5.66 - 0.89 * 1), 0),
+                    ("R2", (-8.0, 5.66 - 0.89 * 9), 0),
+                    ("C4", (-8.0, 5.66 - 0.89 * 7), 0),
                 ],
             ),
             (  # xiao
@@ -109,17 +109,41 @@ def place_mods():
             kad.set_mod_pos_angle(f"H{idx}", vec2.add(board_orig, ((board_width / 2 - 3) * dx, (board_height / 2 - 3) * dy)), 0)
 
 
-w_pwr, r_pwr = 0.60, 1.5  # power
-w_led, r_led = 0.45, 1.2  # LED dat
-w_dat, r_dat = 0.40, 0.7  # row / col
+w_pwr, r_pwr = 0.50, 1.5  # power
+w_dat, r_dat = 0.30, 0.7  # row / col
 
 r_tri = 0.7
 
 
 def wire_mod():
-    rj45 = "J1"
-    xiao_l = "J3"
-    xiao_r = "J4"
+    pmw = "U1"
+    xiao = "U3"
+    ldo = "U2"
+    kad.wire_mod_pads(
+        [
+            ### PMW3360
+            # ("C1", "2", "C3", "2", w_dat, (Strt), "F.Cu"),
+            ("C1", "1", "C2", "1", w_dat, (Strt)),
+            (pmw, "3", "C2", "1", w_dat, (Strt)),
+            (pmw, "4", "C5", "1", w_dat, (Strt)),
+            (pmw, "5", "C3", "1", w_dat, (Strt)),
+            (pmw, "12", "R2", "2", w_dat, (Strt)),
+            (pmw, "13", "C4", "2", w_dat, (Strt)),
+            ("R2", "1", "C4", "1", w_dat, (Dird, 0, 90)),
+            (pmw, "15", "R1", "2", w_dat, (Strt)),
+            ("C6", "1", "R1", "1", w_dat, (Dird, 0, 90)),
+            ### LDO
+            (ldo, "1", "C11", "1", w_dat, (Dird, 0, -45)),
+            (ldo, "2", "C11", "2", w_dat, (Dird, 0, -45)),
+            ("C11", "1", "C12", "1", w_dat, (Strt)),
+            ("C11", "2", "C12", "2", w_dat, (Strt)),
+            ("C14", "2", "R4", "2", w_dat, (Dird, [(0, 0.1), 90], 0)),
+            ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.1), 90], 0, 0)),
+            # ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.1), (90, 8), 90], 0, r_dat)),
+        ]
+    )
+
+    return
     via_3v3_led = kad.add_via(kad.calc_pos_from_pad(rj45, "23", (0.6, -1.8)), VCC, via_size_pwr)
     # RJ45 - xiao_r
     via_5vd = kad.add_via_relative(rj45, "2", (0, -3.8), via_size_pwr)
@@ -364,7 +388,7 @@ def add_zone(net_name, layer_name, rect):
 
 def main():
     place_mods()
-    # wire_mod()
+    wire_mod()
     draw_edge_cuts()
     set_refs()
 
