@@ -97,10 +97,10 @@ def place_mods():
             vec2.add(board_orig, (-13, -2.54 * 2.5 * (n - 2))),
             90,
             [
-                (f"R{11+2*n}", (-1.5, 0.8), 90),
+                (f"R{11+2*n}", (+1.5, 0.8), 90),
                 (f"R{12+2*n}", (0, 0.8), -90),
-                (f"C2{n+1}", (+1.5, 0.8), 90),
-                (f"J{n+1}", (-1.27, -2.54), 90),
+                (f"C2{n+1}", (-1.5, 0.8), 90),
+                (f"J{n+1}", (+1.27, -2.54), -90),
             ],
         )
     for iy, dy in enumerate((-1, +1)):
@@ -135,14 +135,45 @@ def wire_mod():
             ### LDO
             (ldo, "1", "C11", "1", w_dat, (Dird, 0, -45)),
             (ldo, "2", "C11", "2", w_dat, (Dird, 0, -45)),
+            (ldo, "4", "R4", "1", w_dat, (Dird, 90, -45, 0.4)),
+            (ldo, "5", "C14", "1", w_dat, (Dird, 90, +45, 0.4)),
+            (ldo, "4", "C13", "2", w_dat, (Dird, 0, -45)),
+            (ldo, "5", "C13", "1", w_dat, (Dird, 0, +45)),
+            ("C13", "1", "R3", "1", w_dat, (Dird, 0, 90)),
+            ("C13", "2", "R3", "2", w_dat, (Dird, 0, 90)),
             ("C11", "1", "C12", "1", w_dat, (Strt)),
             ("C11", "2", "C12", "2", w_dat, (Strt)),
-            ("C14", "2", "R4", "2", w_dat, (Dird, [(0, 0.1), 90], 0)),
-            ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.1), 90], 0, 0)),
-            # ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.1), (90, 8), 90], 0, r_dat)),
+            ("C14", "2", "R4", "2", w_dat, (Dird, [(0, 0.05), 90], 0)),
+            ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.05), 90], 0, 0.4)),
+            ("R4", "2", ldo, "2", w_dat, (Dird, 90, 0, 0.4)),
         ]
     )
 
+    # SW
+    for n in range(1, 6):
+        kad.wire_mod_pads(
+            [
+                (f"J{n}", "1", f"R{9+2*n}", "2", w_dat, (Dird, 90, 0, 0)),
+                (f"J{n}", "2", f"C{20+n}", "2", w_dat, (Dird, 90, 0, 0)),
+                (f"R{10+2*n}", "1", f"R{9+2*n}", "2", w_dat, (Dird, 90, 0, 0)),
+                (f"R{10+2*n}", "2", f"C{20+n}", "1", w_dat, (Dird, 90, 0, 0)),
+            ]
+        )
+
+    via_dsw3 = kad.add_via_relative("C23", "1", (0, -1.4), via_size_dat)
+    via_dsw5 = kad.add_via_relative("C25", "1", (0, -1.4), via_size_dat)
+
+    kad.wire_mod_pads(
+        [
+            ("C21", "1", xiao, "1", w_dat, (Dird, 90, 0)),
+            ("C22", "1", xiao, "2", w_dat, (Dird, [(180, 1.1), 90], 0)),
+            ("C24", "1", xiao, "4", w_dat, (Dird, [(180, 2.2), 90], 0)),
+            ("C23", "1", None, via_dsw3, w_dat, (Strt)),
+            ("C23", via_dsw3, xiao, "3", w_dat, (Dird, 90, 0), "In1.Cu"),
+            ("C25", "1", None, via_dsw5, w_dat, (Strt)),
+            ("C25", via_dsw5, xiao, "5", w_dat, (Dird, [(180, 1.0), 90], 0), "In1.Cu"),
+        ]
+    )
     return
     via_3v3_led = kad.add_via(kad.calc_pos_from_pad(rj45, "23", (0.6, -1.8)), VCC, via_size_pwr)
     # RJ45 - xiao_r
@@ -300,12 +331,14 @@ def set_refs():
         (None, None, None, ["J7", "J8", "J9"]),
         # switches
         (1.8, 90, 0, [f"J{n+1}" for n in range(5)]),
-        (2.2, 180 - 18, -90, [f"R{2*n+11}" for n in range(5)]),
-        (2.2, 18, -90, [f"R{2*n+12}" for n in range(5)]),
-        (1.3, -90, 0, [f"C2{n+1}" for n in range(5)]),
-        (0.7 + 1.5 * 2, -90, 0, ["C25"]),
+        (2.2, 180 + 18, -90, [f"R{2*n+11}" for n in range(5)]),
+        (2.2, -18, -90, [f"R{2*n+12}" for n in range(5)]),
+        (1.3, 90, 0, [f"C2{n+1}" for n in range(5)]),
+        (1.3, -90, 0, ["R17"]),
+        (2.0, 0, -90, ["R18"]),
+        (1.3 + 1.5 * 2, -90, 0, ["C25"]),
         (1.0 + 1.5 * 2, +90, 0, ["R20"]),
-        (1.3 + 1.5 * 2, -90, 0, ["R19"]),
+        (0.7 + 1.5 * 2, -90, 0, ["R19"]),
     ]
     for offset_length, offset_angle, text_angle, mod_names in refs:
         for mod_name in mod_names:

@@ -186,7 +186,7 @@ def add_track(a, b, net, layer, width):
 
 
 def add_via(pos, net, size):  # size [mm]
-    pnt_ = pnt.to_unit(vec2.round(pos, PointDigits), UnitMM)
+    pnt_ = pnt.to_VEC2I(pnt.to_unit(vec2.round(pos, PointDigits), UnitMM))
     via = pcbnew.PCB_VIA(pcb)
     via.SetPosition(pnt_)
     via.SetWidth(pcbnew.FromMM(size[0]))
