@@ -94,12 +94,12 @@ def place_mods():
     )
     for n in range(5):
         kad.move_mods(
-            vec2.add(board_orig, (-13, -2.54 * 2.5 * (n - 2))),
+            vec2.add(board_orig, (-13, -6.4 * (n - 2))),
             90,
             [
-                (f"R{11+2*n}", (+1.5, 0.8), 90),
-                (f"R{12+2*n}", (0, 0.8), -90),
-                (f"C2{n+1}", (-1.5, 0.8), 90),
+                (f"R{11+2*n}", (+1.5, 0.4), 90),
+                (f"R{12+2*n}", (0, 0.4), -90),
+                (f"C2{n+1}", (-1.5, 0.4), 90),
                 (f"J{n+1}", (+1.27, -2.54), -90),
             ],
         )
@@ -150,28 +150,27 @@ def wire_mod():
     )
 
     # SW
-    for n in range(1, 6):
+    via_sw_3v3 = [kad.add_via_relative(f"R{11+2*n}", "1", (1.6, 1.3), via_size_dat) for n in range(5)]
+    for n in range(5):
         kad.wire_mod_pads(
             [
-                (f"J{n}", "1", f"R{9+2*n}", "2", w_dat, (Dird, 90, 0, 0)),
-                (f"J{n}", "2", f"C{20+n}", "2", w_dat, (Dird, 90, 0, 0)),
-                (f"R{10+2*n}", "1", f"R{9+2*n}", "2", w_dat, (Dird, 90, 0, 0)),
-                (f"R{10+2*n}", "2", f"C{20+n}", "1", w_dat, (Dird, 90, 0, 0)),
+                (f"J{n+1}", "1", f"R{11+2*n}", "2", w_dat, (Dird, 90, 0, 0)),
+                (f"J{n+1}", "2", f"C{21+n}", "2", w_dat, (Dird, 90, 0, 0)),
+                (f"R{12+2*n}", "2", f"C{21+n}", "1", w_dat, (Dird, 90, 0, 0)),
+                (f"R{11+2*n}", "2", f"R{12+2*n}", "1", w_dat, (Dird, 0, 90, 0)),
+                (f"R{11+2*n}", "1", None, via_sw_3v3[n], w_dat, (Dird, -45, 0, 0)),
             ]
         )
 
-    via_dsw3 = kad.add_via_relative("C23", "1", (0, -1.4), via_size_dat)
-    via_dsw5 = kad.add_via_relative("C25", "1", (0, -1.4), via_size_dat)
+    kad.wire_mod_pads([("J1", via_sw_3v3[0], "J5", via_sw_3v3[4], w_dat, (Strt), "In1.Cu")])
 
     kad.wire_mod_pads(
         [
             ("C21", "1", xiao, "1", w_dat, (Dird, 90, 0)),
-            ("C22", "1", xiao, "2", w_dat, (Dird, [(180, 1.1), 90], 0)),
-            ("C24", "1", xiao, "4", w_dat, (Dird, [(180, 2.2), 90], 0)),
-            ("C23", "1", None, via_dsw3, w_dat, (Strt)),
-            ("C23", via_dsw3, xiao, "3", w_dat, (Dird, 90, 0), "In1.Cu"),
-            ("C25", "1", None, via_dsw5, w_dat, (Strt)),
-            ("C25", via_dsw5, xiao, "5", w_dat, (Dird, [(180, 1.0), 90], 0), "In1.Cu"),
+            ("C22", "1", xiao, "2", w_dat, (Dird, [(180, 1.0), 90], 0)),
+            ("C23", "1", xiao, "3", w_dat, (Dird, [(180, 1.0), (90, 5.8), (135, 1.0), 90], 0)),
+            ("C24", "1", xiao, "4", w_dat, (Dird, [(180, 1.0), (90, 5.8), (135, 1.0), (90, 5.4), (135, 1.0), 90], 0)),
+            ("C25", "1", xiao, "5", w_dat, (Dird, [(180, 1.0), (90, 5.8), (135, 1.0), (90, 5.4), (135, 1.0), (90, 5.4), (135, 1.0), 90], 0)),
         ]
     )
     return
