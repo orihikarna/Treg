@@ -78,16 +78,16 @@ def place_mods():
             ),
             (  # LDO
                 None,
-                (13.2, 9),
+                (13.2, 10),
                 90,
                 [
                     ("U2", (0, 0), 0),
                     ("C11", (-2.8, 0), -90),
                     ("C12", (-4.3, 0), -90),
-                    ("C13", (+2.8, 0), -90),
-                    ("R3", (+4.3, 0), -90),
-                    ("R4", (+0.9, +2.5), 180),
-                    ("C14", (+0.9, -2.5), 180),
+                    ("C13", (+4.3, 0), -90),
+                    ("R3", (+2.8, 0), -90),
+                    ("R4", (+0.0, +2.5), 180),
+                    ("C14", (+0.0, -2.5), 180),
                 ],
             ),
         ],
@@ -152,7 +152,7 @@ def wire_mod():
             ("C4", "2", None, via_gnd_C4, w_dat, (Strt)),
             ("C6", "2", None, via_gnd_C6, w_dat, (Strt)),
             ### LDO
-            (ldo, "1", None, via_ldo_vbus[0], w_dat, (Strt)),
+            ("C12", "1", None, via_ldo_vbus[0], w_dat, (Strt)),
             (ldo, "3", None, via_ldo_vbus[1], w_dat, (Strt)),
             (ldo, via_ldo_vbus[0], None, via_ldo_vbus[1], w_dat, (Dird, 90, 0, r_dat), "B.Cu"),
             (ldo, "1", "C11", "1", w_dat, (Dird, 0, -45)),
@@ -168,6 +168,11 @@ def wire_mod():
             ("C14", "2", "R4", "2", w_dat, (Dird, [(0, 0.05), 90], 0)),
             ("C14", "2", ldo, "2", w_dat, (Dird, [(0, 0.05), 90], 0, 0.4)),
             ("R4", "2", ldo, "2", w_dat, (Dird, 90, 0, 0.4)),
+            ### LD0 <--> xiao
+            (xiao, "13", "C12", "2", w_pwr, (Dird, 0, 90, r_pwr), "F.Cu"),  # GND
+            (xiao, "14", "C12", via_ldo_vbus[0], w_pwr, (Dird, 0, 90, r_pwr), "B.Cu"),  # VBUS
+            ### LDO <--> pmw
+            ("R1", "1", "C14", "1", w_dat, (Dird, 0, 0, 0.4)),
             ### xiao
             (xiao, "7", pmw, "7", w_dat, (Dird, 90, 0, r_dat)),  # nRESET
             (xiao, "8", pmw, "9", w_dat, (Dird, 90, 0, r_dat), "B.Cu"),  # Motion
@@ -417,11 +422,11 @@ def set_refs():
     # U1
     angle = kad.get_mod_angle("U1")
     pads = [
-        (2, "NC"),
+        (2, "nc"),
         (3, "VPIX"),
         (4, "1V9"),
         (5, "3V3"),
-        (6, "NC"),
+        (6, "nc"),
         (7, "nRST"),
         (8, "GND"),
         (9, "MOTN"),
@@ -429,9 +434,9 @@ def set_refs():
         (11, "MOSI"),
         (12, "MISO"),
         (13, "GND"),
-        (14, "NC"),
+        (14, "nc"),
         (15, "LED"),
-        (16, "NC"),
+        (16, "nc"),
     ]
     for idx, (pin, pad) in enumerate(pads):
         side = +1 if pin < 9 else -1
