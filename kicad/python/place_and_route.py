@@ -132,32 +132,39 @@ def wire_mod():
 
     via_gnd_U1 = kad.add_via(vec2.add(kad.get_mod_pos(pmw), (0, -10)), GND, via_size_pwr)
     via_gnd_C1 = kad.add_via_relative("C1", "2", (0, +1.6), via_size_pwr)
-    via_gnd_C3 = kad.add_via_relative("C3", "2", (0, -1.6), via_size_pwr)
-    via_gnd_C4 = kad.add_via_relative("C4", "2", (0, +1.6), via_size_pwr)
-    via_gnd_C6 = kad.add_via_relative("C6", "2", (0, +1.6), via_size_pwr)
+    # via_gnd_C4 = kad.add_via_relative("C4", "2", (0, +1.6), via_size_pwr)
+    # via_gnd_C6 = kad.add_via_relative("C6", "2", (0, +1.6), via_size_pwr)
     via_1V9_R1 = kad.add_via_relative("R1", "1", (-1.6, 0), via_size_pwr)
     via_1V9_R3 = kad.add_via_relative("R3", "1", (-1.0, 0), via_size_pwr)
 
     kad.wire_mod_pads(
         [
             ### PMW3360
+            # left
+            (pmw, "3", "C2", "1", w_dat, (Dird, -45, 0, r_dat)),  # VDDPIX
             ("C1", "1", "C2", "1", w_dat, (Strt)),
-            (pmw, "3", "C2", "1", w_dat, (Strt)),
-            (pmw, "4", "C5", "1", w_dat, (Strt)),
-            (pmw, "5", "C3", "1", w_dat, (Strt)),
-            (pmw, "12", "R2", "2", w_dat, (Strt)),
-            (pmw, "13", "C4", "2", w_dat, (Strt)),
-            ("R2", "1", "C4", "1", w_dat, (Dird, 0, 90)),
-            (pmw, "15", "R1", "2", w_dat, (Strt)),
-            ("C6", "1", "R1", "1", w_dat, (Dird, 0, 90)),
+            (pmw, "4", "C5", "1", w_dat, (Dird, 0, 90, 0)),  # 1V9
+            (pmw, "4", "C6", "1", w_dat, (Dird, 0, 90, 0)),  # 1V9
+            (pmw, "5", "C3", "1", w_dat, (Dird, +45, 0, r_dat)),  # 3V4
+            ("C3", "1", "C4", "1", w_dat, (Strt)),
+            (pmw, "8", "C4", "2", w_pwr, (Dird, [(0, 1.2), 90], [(90, 1.2), 0], r_pwr)),  # GND
+            ("C1", "2", "C4", "2", w_pwr, (Strt)),
+            # right
+            ("C7", "1", "C8", "1", w_dat, (Strt)),
+            ("C7", "2", "C8", "2", w_dat, (Strt)),
             ("R1", "1", None, via_1V9_R1, w_dat, (Strt)),
-            (pmw, "8", "C3", via_gnd_C3, w_dat, (Dird, 0, [(180, 2.0), 90], r_dat), "In1.Cu"),
-            ("C1", via_gnd_C1, "C3", via_gnd_C3, w_dat, (Strt), "F.Cu"),
-            ("C1", via_gnd_C1, "C3", via_gnd_C3, w_dat, (Strt), "F.Cu"),
+            ("R1", "1", "C8", "1", w_dat, (Dird, 90, 0)),
+            (pmw, "15", "R1", "2", w_dat, (Strt)),  # LED_P
+            (pmw, "13", "JP1", "1", w_dat, (Dird, 45, 0, r_dat)),  # nCS
+            ("R2", "1", "C9", "1", w_dat, (Dird, 0, 90)),
+            (pmw, "12", "R2", "2", w_dat, (Strt)),  # MISO
+            # (pmw, "13", "C4", "2", w_dat, (Strt)),
+            # ("C1", via_gnd_C1, "C3", via_gnd_C3, w_dat, (Strt), "F.Cu"),
+            # ("C1", via_gnd_C1, "C3", via_gnd_C3, w_dat, (Strt), "F.Cu"),
             ("C1", via_gnd_C1, None, via_gnd_U1, w_dat, (Dird, 90, 0, r_pwr)),
-            ("C6", via_gnd_C6, None, via_gnd_U1, w_dat, (Dird, 90, 0, r_pwr)),
-            ("C4", "2", None, via_gnd_C4, w_dat, (Strt)),
-            ("C6", "2", None, via_gnd_C6, w_dat, (Strt)),
+            # ("C6", via_gnd_C6, None, via_gnd_U1, w_dat, (Dird, 90, 0, r_pwr)),
+            # ("C4", "2", None, via_gnd_C4, w_dat, (Strt)),
+            # ("C6", "2", None, via_gnd_C6, w_dat, (Strt)),
             ### LDO
             ("C12", "1", None, via_ldo_vbus[0], w_dat, (Strt)),
             (ldo, "3", None, via_ldo_vbus[1], w_dat, (Dird, 90, 0, 0.4)),
@@ -213,10 +220,10 @@ def wire_mod():
     kad.wire_mod_pads(
         [
             ("C21", "1", "J7", "2", w_dat, (Dird, 0, -45, r_sw)),
-            ("C22", "1", "J7", "3", w_dat, (Dird, [(180, 1.2), 90], -45, r_sw)),
-            ("C23", "1", "J7", "4", w_dat, (Dird, [(180, 1.2), (90, 5.2), (135, 1.2), 90], -45, r_sw)),
-            ("C24", "1", "J7", "5", w_dat, (Dird, [(180, 1.2), (90, 5.2), (135, 1.2), 90], -45, r_sw)),
-            ("C25", "1", "J7", "6", w_dat, (Dird, [(180, 1.2), (90, 5.2), (135, 1.2), (90, 4.6), (135, 1.2), 0], [(-135, 2.2), -90], r_sw)),
+            ("C22", "1", "J7", "3", w_dat, (Dird, [(180, 1.1), 90], -45, r_sw)),
+            ("C23", "1", "J7", "4", w_dat, (Dird, [(180, 1.1), (90, 5.2), (135, 1.2), 90], -45, r_sw)),
+            ("C24", "1", "J7", "5", w_dat, (Dird, [(180, 1.1), (90, 5.2), (135, 1.2), 90], -45, r_sw)),
+            ("C25", "1", "J7", "6", w_dat, (Dird, [(180, 1.1), (90, 5.2), (135, 1.2), (90, 4.6), (135, 1.2), 0], [(-135, 2.2), -90], r_sw)),
         ]
     )
 
