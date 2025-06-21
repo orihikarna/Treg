@@ -57,17 +57,19 @@ def place_mods():
                 180,
                 [
                     ("U1", (0, 0), 0),
+                    # left side
                     ("C1", (+8.0, 5.66 - 0.89 * 1), 0),
                     ("C2", (+8.0, 5.66 - 0.89 * 3 + 0.3 * 1), 0),
                     ("C5", (+8.0, 5.66 - 0.89 * 5 + 0.3 * 2), 0),
                     ("C6", (+8.0, 5.66 - 0.89 * 7 + 0.3 * 3), 0),
                     ("C3", (+8.0, 5.66 - 0.89 * 9), 0),
                     ("C4", (+8.0, 5.66 - 0.89 * 11 + 0.3), 0),
-                    ("R1", (-8.0, 5.66 - 0.89 * 1 - 0.3 * 3), 0),
-                    ("C7", (-8.0, 5.66 - 0.89 * 3 - 0.3 * 2), 0),
-                    ("C8", (-8.0, 5.66 - 0.89 * 5 - 0.3 * 1), 0),
-                    ("R2", (-8.0, 5.66 - 0.89 * 11 + 0.3 * 2), 0),
-                    ("C9", (-8.0, 5.66 - 0.89 * 9 + 0.3 * 1), 0),
+                    # right side
+                    ("R1", (-8.0, 5.66 - 0.89 * 1 - 0.3 * 3 - 0.1), 0),
+                    ("C7", (-8.0, 5.66 - 0.89 * 3 - 0.3 * 2 - 0.1), 0),
+                    ("C8", (-8.0, 5.66 - 0.89 * 5 - 0.3 * 1 - 0.1), 0),
+                    ("C9", (-8.0, 5.66 - 0.89 * 9 + 0.3 * 1 + 0.1), 0),
+                    ("R2", (-8.0, 5.66 - 0.89 * 11 + 0.3 * 2 + 0.1), 0),
                 ],
             ),
             (  # xiao
@@ -131,14 +133,16 @@ def wire_mod():
         kad.add_via_relative(ldo, "3", (-1.2, +1.2), via_size_dat),
     ]
 
+    # left side
     via_gnd_C1 = kad.add_via_relative("C1", "2", (0, +1.4), via_size_pwr)
-    via_3v3_C4 = kad.add_via_relative("C4", "1", (0.4, -1.6), via_size_pwr)
     via_1V9_C6 = kad.add_via_relative("C6", "1", (0, -1.3), via_size_pwr)
+    via_gnd_C6 = kad.add_via_relative("C6", "2", (0, -1.3), via_size_pwr)
+    via_3v3_C4 = kad.add_via_relative("C4", "1", (0.45, -1.4), via_size_pwr)
+    # right side
     via_3v3_C9 = kad.add_via_relative("C9", "1", (-1.4, 0), via_size_pwr)
     via_1V9_C8 = kad.add_via_relative("C8", "1", (-1.4, 0), via_size_pwr)
     via_1V9_C13 = kad.add_via_relative("C13", "1", (0, -1.4), via_size_pwr)
     via_gnd_CS = kad.add_via_relative(pmw, "13", (-1.9, 0), via_size_pwr)  # NCS = GND
-    # via_gnd_pmw = kad.add_via(vec2.add(kad.get_mod_pos(pmw), (5.4, +9.6)), GND, via_size_pwr)
 
     kad.wire_mod_pads(
         [
@@ -151,7 +155,7 @@ def wire_mod():
             ("C6", "1", None, via_1V9_C6, w_dat, (Dird, 0, 90, 0)),  # 1V9
             (pmw, "5", "C3", "1", w_dat, (Dird, +45, 0, r_dat)),  # 3V4
             ("C3", "1", "C4", "1", w_dat, (Strt)),
-            (pmw, "7", "J7", "7", w_dat, (Dird, [(-45, 1.2), 180], [(-45, 1.6), 90], r_dat), "B.Cu"),  # nRESET
+            (pmw, "7", "J7", "7", w_dat, (Dird, 40, 90, r_dat), "B.Cu"),  # nRESET
             ("C4", "1", None, via_3v3_C4, w_pwr, (Dird, 90, 0)),  # 3V3
             (pmw, "8", None, via_gnd_C1, w_pwr, (Dird, 0, 90, 1.6), "F.Cu"),  # GND
             # right
@@ -209,8 +213,8 @@ def wire_mod():
                 (f"R{11+2*n}", "1", None, via_sw_3v3[n], w_dat, (Dird, 90, 0, 0)),
             ]
         )
-    # for n in range(4):
-    #     kad.wire_mod_pads([(f"J{n+1}", "2", f"J{n+2}", "2", w_pwr, (Dird, [(0, 2), 90], 0, r_pwr), "B.Cu")])
+    for n in range(4):
+        kad.wire_mod_pads([(f"J{n+1}", "2", f"J{n+2}", "2", w_pwr, (Dird, [(0, 2), 90], 0, r_pwr), "B.Cu")])
 
     # SW --> xiao
     r_sw = 1.2
@@ -230,16 +234,19 @@ def wire_mod():
     via_pmw_3V3 = kad.add_via(vec2.add(kad.get_mod_pos(pmw), (0, +11.0)), V3_3, via_size_pwr)
     kad.wire_mod_pads(
         [
-            (pmw, via_3v3_C4, None, via_pmw_top, w_pwr, (Dird, 90, 0, r_pwr), "In1.Cu"),  # 3V3
-            # (pmw, "5", None, via_pmw_top, w_pwr, (Dird, [(30, 1.8), 90], [(0, 20), 0], r_pwr), "In1.Cu"),  # 3V3
+            (pmw, via_1V9_C6, None, via_pmw_1V9, w_pwr, (Dird, [(90, 2.0), (135, 0.92), 90], 0, r_pwr), "In1.Cu"),  # 1V9
+            (pmw, via_1V9_C8, None, via_pmw_1V9, w_pwr, (Dird, [(45, 2.0), 90], 0, r_pwr), "In1.Cu"),  # 1V9
+            (pmw, via_3v3_C4, None, via_pmw_3V3, w_pwr, (Dird, 90, 0, r_pwr), "In1.Cu"),  # 3V3
+            (pmw, via_pmw_3V3, None, via_3v3_C9, w_pwr, (Dird, 0, 90, r_pwr), "In1.Cu"),  # 3V3
             (pmw, "8", None, via_pmw_top, w_pwr, (Dird, 90, 0, r_pwr), "F.Cu"),  # GND
-            (pmw, via_pmw_top, None, via_3v3_C9, w_pwr, (Dird, 0, 90, r_pwr), "In1.Cu"),  # 3V3
-            ("J8", "3", None, via_pmw_top, w_pwr, (Dird, [(-30, 2.8), 90], 0, r_pwr), "In1.Cu"),  # 3V3
-            ("J8", "2", None, via_pmw_top, w_pwr, (Dird, [(-30, 2.8), 90], 0, r_pwr), "F.Cu"),  # GND
             (pmw, via_gnd_CS, pmw, via_pmw_top, w_pwr, (Dird, [(180, 4.2), 90], 0, r_pwr), "F.Cu"),  # GND
+            ("J8", "3", None, via_pmw_3V3, w_pwr, (Dird, [(-30, 2.8), 90], 0, r_pwr), "In1.Cu"),  # 3V3
+            ("J8", "2", None, via_pmw_top, w_pwr, (Dird, [(-30, 2.8), 90], 0, r_pwr), "F.Cu"),  # GND
             ("C14", "2", pmw, via_pmw_top, w_pwr, (Dird, [(-90, 1.0), 0], 0, r_pwr), "F.Cu"),  # GND
         ]
     )
+    pcb.Remove(via_pmw_1V9)
+    pcb.Remove(via_pmw_3V3)
     pcb.Remove(via_pmw_top)
 
     # xiao --> SW 3V3 pwr
