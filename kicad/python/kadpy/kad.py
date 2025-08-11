@@ -797,13 +797,7 @@ def draw_closed_corners(corners, layer, width):
 def _add_area(pnts, layer, net_name):
     net = -1 if net_name is None else pcb.FindNet(net_name).GetNetCode()
     pnts = [pnt.to_unit(vec2.round(pt, PointDigits), UnitMM) for pt in pnts]
-    area = pcb.AddArea(
-        None,
-        net,
-        pcb.GetLayerID(layer),
-        pnts[0],
-        pcbnew.ZONE_BORDER_DISPLAY_STYLE_DIAGONAL_EDGE,
-    )
+    area = pcb.AddArea(None, net, pcb.GetLayerID(layer), pnt.to_VEC2I(pnts[0]), pcbnew.ZONE_BORDER_DISPLAY_STYLE_DIAGONAL_EDGE)
     poly = area.Outline()
     for idx, pt in enumerate(pnts):
         if idx == 0:

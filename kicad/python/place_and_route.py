@@ -29,7 +29,7 @@ via_size_pwr = VIA_Size[1]
 via_size_dat = VIA_Size[2]
 via_size_gnd = VIA_Size[3]
 
-Cu_layers = ["F.Cu", "B.Cu"]  # , "In1.Cu", "In2.Cu"]
+Cu_layers = ["F.Cu", "B.Cu", "In1.Cu", "In2.Cu"]
 
 pcb = pcbnew.GetBoard()
 # for n in dir(pcb):
@@ -405,13 +405,14 @@ def set_refs():
 
 
 def add_zone(net_name, layer_name, rect):
-    settings = pcb.GetZoneSettings()
-    settings.m_ZoneClearance = pcbnew.FromMils(12)
-    pcb.SetZoneSettings(settings)
+    # settings = pcb.GetZoneSettings()
+    # settings.m_ZoneClearance = pcbnew.FromMils(12)
+    # pcb.SetZoneSettings(settings)
 
     zone = kad.add_zone(rect, layer_name, net_name)
-    zone.SetMinThickness(pcbnew.FromMils(13))
-    zone.SetThermalReliefGap(pcbnew.FromMils(13))
+    zone.SetMinThickness(pcbnew.FromMils(12))
+    zone.SetThermalReliefGap(pcbnew.FromMils(12))
+    zone.SetLocalClearance(pcbnew.FromMils(16))
     # zone.Hatch()
 
 
@@ -428,8 +429,8 @@ def main():
 
     # zones
     rect = kad.make_rect(vec2.scale(1.1, board_size), vec2.scale(-0.5 * 1.1, board_size, board_orig))
-    # for layer in Cu_layers:
-    #     add_zone("GND", layer, rect)
+    for layer in ["In1.Cu", "In2.Cu", "B.Cu"]:
+        add_zone("GND", layer, rect)
 
     # name
     kad.add_text(
@@ -448,4 +449,7 @@ if __name__ == "__main__":
     kad.removeDrawings()
     kad.removeTracksAndVias()
     main()
+    if False:
+        filler = pcbnew.ZONE_FILLER(pcb)
+        filler.Fill(pcb.Zones())
     pcbnew.Refresh()
