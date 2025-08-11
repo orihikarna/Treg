@@ -128,7 +128,10 @@ def wire_mod():
     ldo = "U2"
     xiao = "U3"
 
-    via_vbus_C12 = kad.add_via_relative("C12", "1", (0, 1.3), via_size_pwr)
+    via_vbus_C12 = kad.add_via_relative("C12", "1", (0, 2.3), via_size_pwr)
+    via_gnd_C12 = kad.add_via_relative("C12", "2", (0, 1.3), via_size_pwr)
+    via_gnd_C14 = kad.add_via_relative("C14", "2", (3.0, 0), via_size_pwr)
+    via_gnd_ldo = kad.add_via_relative(ldo, "2", (2.0, 0), via_size_pwr)
 
     # left side
     via_gnd_C1 = kad.add_via_relative("C1", "2", (0, +1.4), via_size_pwr)
@@ -140,6 +143,7 @@ def wire_mod():
     via_1V9_C8 = kad.add_via_relative("C8", "1", (-1.4, 0), via_size_pwr)
     via_1V9_C13 = kad.add_via_relative("C13", "1", (0, -1.4), via_size_pwr)
     via_gnd_CS = kad.add_via_relative(pmw, "13", (-1.9, 0), via_size_pwr)  # NCS = GND
+    via_gnd_CS2 = kad.add_via_relative(pmw, "13", (-2.2, -4.2), via_size_pwr)  # NCS = GND
 
     kad.wire_mod_pads(
         [
@@ -168,15 +172,19 @@ def wire_mod():
             ("C9", "1", "R2", "1", w_dat, (Dird, 90, 0)),
             (pmw, "12", "R2", "2", w_dat, (Dird, -45, 0, r_dat)),  # MISO
             ### LDO
+            ("C14", via_gnd_C14, "C14", "2", w_pwr, (Strt)),
+            ("C12", via_gnd_C14, "J8", "2", w_pwr, (Dird, 90, 0, r_pwr)),
+            ("C12", via_gnd_C12, "C12", "2", w_pwr, (Strt)),
+            ("C12", via_gnd_C12, "J8", "2", w_pwr, (ZgZg, 0, 30), "In1.Cu"),
             ("C12", via_vbus_C12, "C12", "1", w_pwr, (Strt)),
-            ("C12", via_vbus_C12, "J8", "1", w_pwr, (Dird, [(-90, 0.8), 45], 0, r_pwr)),
+            ("C12", via_vbus_C12, "J8", "1", w_pwr, (Dird, [(180, 1.0), 45], 0, r_pwr)),
             ("C12", via_vbus_C12, ldo, "3", w_dat, (Dird, 0, [(-90, 1.0), 0], r_dat)),
             (ldo, "1", "C11", "1", w_dat, (Dird, 0, -45)),
             (ldo, "2", "C11", "2", w_dat, (Dird, 0, -45, 0.4)),
-            (ldo, "2", "R4", "2", w_dat, (Dird, 0, -45, 0.4)),
-            (ldo, "2", "C14", "2", w_dat, (Dird, 0, [(135, 1.1), 90], 0)),
             (ldo, "4", "R4", "1", w_dat, (Dird, 0, 0, 0)),
             (ldo, "5", "C14", "1", w_dat, (Dird, 0, 90, 0)),
+            (ldo, via_gnd_ldo, "C14", "2", w_dat, (Dird, 0, [(135, 1.1), 90], r_dat)),
+            (ldo, via_gnd_ldo, "R4", "2", w_dat, (Dird, 0, -45, r_dat)),
             ("R3", "2", "R4", "1", w_dat, (Strt)),
             ("R3", "1", "C13", "1", w_dat, (Dird, 90, 0)),
             ("R3", "2", "C13", "2", w_dat, (Dird, 90, 0)),
@@ -186,15 +194,15 @@ def wire_mod():
             ("C14", "1", "C13", "1", w_pwr, (Dird, [(180, 1.0), 135], [(180, 1.0), 90], 0.4)),
             ### LDO <--> pmw
             ("C8", via_1V9_C8, "C13", via_1V9_C13, w_pwr, (Dird, 0, 90, r_pwr)),
-            # ("C8", via_1V9_C6, "C8", via_1V9_C8, w_pwr, (Dird, 0, 90, r_pwr)),
             ### xiao <--> pmw
             (xiao, "8", pmw, "9", w_dat, (Dird, 90, -45, r_dat), "B.Cu"),  # Motion
-            (xiao, "9", pmw, "10", w_dat, (Dird, [(0, 2.4), 90], -45, r_dat), "B.Cu"),  # SCLK
-            (xiao, "10", pmw, "12", w_dat, (Dird, [(0, 3.4), 90], -45, r_dat), "In2.Cu"),  # MISO
-            (xiao, "11", pmw, "11", w_dat, (Dird, [(0, 3.4), 90], -45, r_dat), "B.Cu"),  # MOSI
+            (xiao, "9", pmw, "10", w_dat, (Dird, [(0, 2.0), 90], -45, r_dat), "B.Cu"),  # SCLK
+            (xiao, "10", pmw, "12", w_dat, (Dird, [(0, 2.5), 90], [(180, 1.6), 135], r_dat), "In2.Cu"),  # MISO
+            (xiao, "11", pmw, "11", w_dat, (Dird, [(0, 3.0), 90], -45, r_dat), "B.Cu"),  # MOSI
         ]
     )
     pcb.Remove(via_vbus_C12)
+    pcb.Remove(via_gnd_ldo)
 
     # SW
     via_sw_3v3 = [kad.add_via_relative(f"R{11+2*n}", "1", (0.2, 1.5), via_size_pwr) for n in range(5)]
@@ -247,7 +255,7 @@ def wire_mod():
 
     # xiao --> SW 3V3 pwr
     via_sw_vert = kad.add_via_relative("R11", "1", (-1.0, -4.4 - 1.0), via_size_pwr)
-    via_xiao_btm = kad.add_via_relative(xiao, "13", (-8.0, -2.54 * 1.8), via_size_pwr)
+    via_xiao_btm = kad.add_via_relative(xiao, "13", (-8.0, -2.54 * 1.6), via_size_pwr)
     kad.wire_mod_pads(
         [
             ("J1", via_sw_vert, "J5", via_sw_3v3[4], w_pwr, (Dird, -45, 90, r_pwr), "In1.Cu"),  # vertical 3V3
