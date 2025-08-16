@@ -420,7 +420,7 @@ def add_zone(net_name, layer_name, rect):
     zone = kad.add_zone(rect, layer_name, net_name)
     zone.SetMinThickness(pcbnew.FromMils(12))
     zone.SetThermalReliefGap(pcbnew.FromMils(12))
-    zone.SetLocalClearance(pcbnew.FromMils(14))
+    zone.SetLocalClearance(pcbnew.FromMils(16))
 
 
 def main():
@@ -438,6 +438,7 @@ def main():
     rect = kad.make_rect(vec2.scale(1.1, board_size), vec2.scale(-0.5 * 1.1, board_size, board_orig))
     for layer in ["F.Cu", "In1.Cu", "In2.Cu", "B.Cu"]:
         add_zone("GND", layer, rect)
+    add_avoid_zone()
 
     # name
     kad.add_text(
