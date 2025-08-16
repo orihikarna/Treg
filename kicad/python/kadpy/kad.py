@@ -814,8 +814,9 @@ def add_zone(rect, layer, net_name="GND"):
 def add_rule_area(pnts, layer):
     area = _add_area(pnts, layer, None)
     area.SetIsRuleArea(True)
-    # area.SetDoNotAllowTracks(no_tracks)
-    # area.SetDoNotAllowVias(no_vias)
+    area.SetDoNotAllowTracks(False)
+    area.SetDoNotAllowVias(False)
+    area.SetDoNotAllowPads(False)
     area.SetDoNotAllowCopperPour(True)
 
 

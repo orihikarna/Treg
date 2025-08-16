@@ -439,9 +439,10 @@ def main():
     for layer in ["F.Cu", "In1.Cu", "In2.Cu", "B.Cu"]:
         add_zone("GND", layer, rect)
 
-    sz = (3.4, 4.0)
-    rect = kad.make_rect(sz, vec2.scale(-0.5, sz, kad.get_mod_pos("U2")))
-    kad.add_rule_area(rect, "F.Cu")
+    if True:
+        sz = (3.4, 4.0)
+        rect = kad.make_rect(sz, vec2.scale(-0.5, sz, kad.get_mod_pos("U2")))
+        kad.add_rule_area(rect, "F.Cu")
 
     # name
     kad.add_text(
