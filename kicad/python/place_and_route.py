@@ -144,7 +144,7 @@ def wire_mod():
             (pmw, "4", "C6", "1", w_dat, (Dird, 0, 90, 0)),  # 1V9
             ("C6", "1", "C5", "1", w_dat, (Dird, 0, 90, 0)),  # 1V9
             ("C6", "1", None, via_1V9_C6, w_dat, (Dird, 0, 90, 0)),  # 1V9
-            (pmw, "5", "C3", "1", w_dat, (Dird, +45, 0, r_dat)),  # 3V4
+            (pmw, "5", "C3", "1", w_dat, (Dird, +45, 0, r_dat)),  # 3V3
             ("C3", "1", "C4", "1", w_dat, (Strt)),
             (pmw, "7", "J7", "7", w_dat, (Dird, 40, 90, r_dat), "B.Cu"),  # nRESET
             ("C4", "1", None, via_3v3_C4, w_pwr, (Dird, 90, 45)),  # 3V3
@@ -257,7 +257,7 @@ def wire_mod():
     via_xiao_btm = kad.add_via_relative(xiao, "13", (-8.0, -2.54 * 1.65), via_size_pwr)
     kad.wire_mod_pads(
         [
-            ("J1", via_sw_3v3[0], "J5", via_sw_3v3[4], w_pwr, Strt, "In1.Cu"),  # vertical 3V3
+            ("J1", via_sw_3v3[0], "J5", via_sw_3v3[4], w_pwr, (Strt), "In1.Cu"),  # vertical 3V3
             ("J1", via_sw_3v3[0], None, via_xiao_btm, w_pwr, (Dird, 90, 0, 2.4), "In1.Cu"),  # 3V3
             ("J8", "3", None, via_xiao_btm, w_pwr, (Dird, [(30, 2.5), 90], 0, 2.0), "In1.Cu"),  # 3V3
         ]
@@ -267,7 +267,19 @@ def wire_mod():
     ### GNDs
     via_gnd_C6 = kad.add_via_relative("C6", "2", (0, -1.3), via_size_pwr)
     via_gnd_CS2 = kad.add_via_relative(pmw, "13", (-2.2, -4.2), via_size_pwr)  # NCS = GND
-    via_gnd_C14 = kad.add_via_relative("C14", "2", (3.0, 0), via_size_pwr)
+    via_gnd_C14 = kad.add_via_relative("C14", "2", (2.0, 0), via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(pmw, "9"), (+1.4, +1.4)), GND, via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(xiao, "1"), (-2.1, -1.27)), GND, via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(xiao, "1"), (+4, 0)), GND, via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(xiao, "7"), (+4, 0)), GND, via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(xiao, "8"), (-4, 0)), GND, via_size_pwr)
+    kad.add_via(vec2.add(kad.get_pad_pos(xiao, "14"), (-4, 0)), GND, via_size_pwr)
+    for n in range(-1, 2):
+        kad.add_via(vec2.add(board_orig, (7 * n, -board_size[1] / 2 + 1.6)), GND, via_size_pwr)
+    for n in range(-2, 1):
+        kad.add_via(vec2.add(board_orig, (board_size[0] / 2 - 2.4, 7 * n)), GND, via_size_pwr)
+    for n in range(1, 2):
+        kad.add_via(vec2.add(board_orig, (board_size[0] / 2 - 1.2, 7 * n)), GND, via_size_pwr)
 
 
 def draw_edge_cuts():
