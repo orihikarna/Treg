@@ -438,7 +438,10 @@ def main():
     rect = kad.make_rect(vec2.scale(1.1, board_size), vec2.scale(-0.5 * 1.1, board_size, board_orig))
     for layer in ["F.Cu", "In1.Cu", "In2.Cu", "B.Cu"]:
         add_zone("GND", layer, rect)
-    add_avoid_zone()
+
+    sz = (3.4, 4.0)
+    rect = kad.make_rect(sz, vec2.scale(-0.5, sz, kad.get_mod_pos("U2")))
+    kad.add_rule_area(rect, "F.Cu")
 
     # name
     kad.add_text(
