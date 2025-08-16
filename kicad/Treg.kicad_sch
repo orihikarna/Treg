@@ -5386,7 +5386,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "footprint:PinHeader_1x02_P2.54mm_Vertical"
 			(at 152.4 124.46 0)
 			(effects
 				(font
@@ -6275,7 +6275,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "footprint:PinHeader_1x02_P2.54mm_Vertical"
 			(at 228.6 124.46 0)
 			(effects
 				(font
@@ -7231,7 +7231,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "footprint:PinHeader_1x02_P2.54mm_Vertical"
 			(at 177.8 124.46 0)
 			(effects
 				(font
@@ -7301,7 +7301,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "footprint:PinHeader_1x02_P2.54mm_Vertical"
 			(at 203.2 124.46 0)
 			(effects
 				(font
@@ -9105,7 +9105,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Seeed Studio XIAO Series Library:XIAO-ESP32C6-SMD"
+		(property "Footprint" "footprint:XIAO-ESP32C6-SMD"
 			(at 162.56 39.37 0)
 			(effects
 				(font
@@ -9442,7 +9442,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical"
+		(property "Footprint" "footprint:PinHeader_1x02_P2.54mm_Vertical"
 			(at 127 124.46 0)
 			(effects
 				(font

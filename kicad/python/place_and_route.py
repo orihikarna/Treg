@@ -326,18 +326,19 @@ def set_refs():
     refs = [
         # PMW3360
         (9.6, -90, 0, ["U1"]),
-        (2.0, 180, -90, ["R1", "R2", "C7", "C8", "C9"]),
+        (2.5, 180, 180, ["R1", "C7", "C8", "R2", "C9"]),
         (2.0, 0, +90, ["C1", "C2", "C3", "C4", "C5", "C6"]),
         # LDO
-        (0, 0, 0, ["U2"]),
-        (3.0, +90, 0, ["R3", "C13"]),
+        (2.4, -90, 90, ["U2"]),
+        (4.5, +90, 0, ["R3", "C13"]),
+        (4.5, -90, 0, ["R4"]),
         (3.0, -90, 0, ["C11", "C12"]),
-        (3.2, 180, 90, ["R4", "C14"]),
+        (3.2, 180, 90, ["C14"]),
         # xiao
         (14, 55, 0, ["U3"]),
         (None, None, None, ["J7", "J8", "J9"]),
         # switches
-        (1.8, 90, 0, [f"J{n+1}" for n in range(5)]),
+        (1.5, 90, 0, [f"J{n+1}" for n in range(5)]),
         (2.2, 180 + 18, -90, [f"R{2*n+11}" for n in range(5)]),
         (2.2, -18, -90, [f"R{2*n+12}" for n in range(5)]),
         (1.3, 90, 0, [f"C2{n+1}" for n in range(5)]),
@@ -362,9 +363,9 @@ def set_refs():
     tsz = 0.9
     # J7
     angle = 180
-    pads = ["DSW1", "DSW2", "DSW3", "DSW4", "DSW5", "nCS", "nRST"]
+    pads = ["SW1", "SW2", "SW3", "SW4", "SW5", "nCS", "nRST"]
     for idx, pad in enumerate(pads):
-        pos = kad.calc_pos_from_pad("J7", f"{idx+1}", (-1.6, 0))
+        pos = kad.calc_pos_from_pad("J7", f"{idx+1}", (-1.5, 0))
         kad.add_text(pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_RIGHT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         kad.add_text(pos, angle, pad, "B.SilkS", (tsz, tsz), 0.18, pcbnew.GR_TEXT_H_ALIGN_LEFT, pcbnew.GR_TEXT_V_ALIGN_CENTER)
     # J8
@@ -403,13 +404,17 @@ def set_refs():
     ]
     for idx, (pin, pad) in enumerate(pads):
         side = +1 if pin < 9 else -1
-        pos = kad.calc_pos_from_pad("U1", f"{pin}", (side, 0))
+        pos = kad.calc_pos_from_pad("U1", f"{pin}", (0.8 * side, 0))
         if True:  # Front
             _pos = pos
             if pin in [1, 2, 3, 4]:
-                _pos = vec2.add(_pos, (0, -0.89 * 7 - (pin - 4) * 0.4))
-            elif pin in [11, 12, 14, 15, 16]:
-                _pos = vec2.add(_pos, (4.4, 0))
+                _pos = vec2.add(_pos, (0, -6.0 - (pin - 4) * 0.4))
+            elif pin in [5]:
+                _pos = vec2.add(_pos, (0, -0.5))
+            elif pin in [9, 10, 11, 12]:
+                _pos = vec2.add(_pos, (0, 2.6 + (pin - 12) * 0.4))
+            elif pin in [14, 15, 16]:
+                _pos = vec2.add(_pos, (0, -4.0 + (pin - 14) * 0.4))
             halign = pcbnew.GR_TEXT_H_ALIGN_LEFT if side > 0 else pcbnew.GR_TEXT_H_ALIGN_RIGHT
             kad.add_text(_pos, angle, pad, "F.SilkS", (tsz, tsz), 0.18, halign, pcbnew.GR_TEXT_V_ALIGN_CENTER)
         halign = pcbnew.GR_TEXT_H_ALIGN_LEFT if side < 0 else pcbnew.GR_TEXT_H_ALIGN_RIGHT
@@ -446,13 +451,13 @@ def main():
 
     # name
     kad.add_text(
-        (board_orig[0] + 16, board_orig[1] - 6),
+        (board_orig[0] + 14, board_orig[1] - 14),
         90,
-        f"orihikarna 2025/08/11",
+        f"TReg v0.1\norihikarna\n2025/08/17",
         "F.Silkscreen",
         (0.8, 0.8),
         0.4,
-        pcbnew.GR_TEXT_H_ALIGN_CENTER,
+        pcbnew.GR_TEXT_H_ALIGN_RIGHT,
         pcbnew.GR_TEXT_V_ALIGN_CENTER,
     )
 
